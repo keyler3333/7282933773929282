@@ -89,7 +89,6 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// --- ParticleField (fixed, never stops) ---
 function ParticleField() {
   const count = 1200
   const pointsRef = useRef<THREE.Points>(null)
@@ -197,7 +196,6 @@ function ParticleField() {
   )
 }
 
-// --- GameThumbnail ---
 function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
   const [imgErr, setImgErr] = useState(false)
   const thumbnailUrl = GAME_THUMBNAILS[game]
@@ -222,7 +220,6 @@ function GameThumbnail({ game, className = "" }: { game: string; className?: str
   )
 }
 
-// --- Navbar (updated with Guide) ---
 function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -310,7 +307,6 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
   )
 }
 
-// --- HomePage (unchanged) ---
 function HomePage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div className="min-h-screen">
@@ -441,7 +437,6 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
   )
 }
 
-// --- ScriptsPage (unchanged) ---
 function ScriptsPage() {
   const [search, setSearch] = useState("")
   const [cat, setCat] = useState("All")
@@ -592,17 +587,18 @@ function ScriptsPage() {
   )
 }
 
-// --- GuidePage (new, expanded, real tone) ---
 function GuidePage() {
   const [activeSection, setActiveSection] = useState("basics")
 
   const sections = [
-    { id: "basics", label: "The Basics" },
-    { id: "ui", label: "Making UI" },
-    { id: "movement", label: "Moving Around" },
-    { id: "bypass", label: "Not Getting Caught" },
-    { id: "lag", label: "Breaking Stuff" },
-    { id: "extra", label: "Extra Tricks" },
+    { id: "basics", label: "Ground Zero" },
+    { id: "ui", label: "GUI & Interfaces" },
+    { id: "movement", label: "Speed, Fly, Noclip" },
+    { id: "esp", label: "ESP & Player Info" },
+    { id: "aimbot", label: "Aim Assist" },
+    { id: "autofarm", label: "Auto-Farm" },
+    { id: "bypass", label: "Staying Undetected" },
+    { id: "lag", label: "Lag & Server Stuff" },
   ]
 
   return (
@@ -610,9 +606,9 @@ function GuidePage() {
       <div className="mb-8">
         <h1 className="font-display text-4xl font-bold text-white mb-2 flex items-center gap-3">
           <BookOpen size={32} className="text-purple-400" />
-          Learning Luna Code
+          What Actually Works
         </h1>
-        <p className="text-white/40 text-lg">Straight from the trenches. No fluff.</p>
+        <p className="text-white/40 text-lg">No fluff. Just stuff that's worked in actual games.</p>
       </div>
 
       {/* Section tabs */}
@@ -640,106 +636,130 @@ function GuidePage() {
         transition={{ duration: 0.2 }}
         className="space-y-8"
       >
-        {/* The Basics */}
+        {/* Ground Zero */}
         {activeSection === "basics" && (
           <>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">First things first</h2>
-              <p className="text-white/50 mb-4">You need an executor. Luna, Delta, Synapse — pick one. Free executors exist (Krnl, Fluxus) but they break constantly and have key systems. If you're serious, buy a premium one. It's worth the $5-10.</p>
-              <p className="text-white/50 mb-4">Once you have an executor, you just paste code and hit inject. That's it. Now let's write some actual code.</p>
+              <h2 className="font-display text-2xl font-bold text-white mb-4">You need an executor first</h2>
+              <p className="text-white/50 mb-4">Free ones exist—Krnl, Fluxus, Delta—but they break constantly and have key systems. If you're serious, just buy one. Synapse, Script‑Ware, or whatever's currently undetected. You'll save hours of headache.</p>
+              <p className="text-white/50 mb-4">Once you have one, paste code, hit inject. That's the whole workflow. Now let's write something that actually does stuff.</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Every script starts with services
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Every script starts like this
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
 
--- This prints to the executor console
-print("Hello, " .. player.Name)
+-- Basic stuff you'll use constantly
+hum.WalkSpeed = 50                     -- faster
+hum.JumpPower = 80                     -- higher jumps
+char.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)   -- teleport up
 
--- Change your walkspeed
-humanoid.WalkSpeed = 50
-
--- Give yourself a tool (if game allows)
+-- Give yourself a tool (if the game allows it)
 local tool = Instance.new("Tool")
-tool.Name = "Sword"
+tool.Name = "DebugSword"
 tool.Parent = player.Backpack`}</pre>
               </div>
             </div>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h3 className="font-display text-xl font-bold text-white mb-3">Finding stuff in the game</h3>
-              <p className="text-white/50 mb-4">Use the explorer in your executor to browse the game's objects. You can see all the remotes, guis, and players. That's how you find what to exploit.</p>
+              <h3 className="font-display text-xl font-bold text-white mb-3">Finding Remotes (the important stuff)</h3>
+              <p className="text-white/50 mb-4">Most games handle actions through RemoteEvents. Your executor's explorer will show you everything. Find the remote that gives money/damage/whatever and fire it.</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Example: find all remote events
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Dump all remotes to console
 for _, v in pairs(game:GetDescendants()) do
-    if v:IsA("RemoteEvent") then
+    if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
         print(v:GetFullName())
     end
-end`}</pre>
+end
+
+-- Fire one (example from a generic game)
+local args = { [1] = "ClaimReward", [2] = "Daily" }
+game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Claim"):FireServer(unpack(args))`}</pre>
               </div>
             </div>
           </>
         )}
 
-        {/* Making UI */}
+        {/* GUI & Interfaces */}
         {activeSection === "ui" && (
           <>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">Buttons, Sliders, and Windows</h2>
-              <p className="text-white/50 mb-4">You can build UI from scratch with Instance.new() but that's tedious. Most people use a library. Here's both ways:</p>
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Making a UI that doesn't suck</h2>
+              <p className="text-white/50 mb-4">You can Instance.new() every button manually. It's tedious and looks terrible. Use a library. Rayfield, Orion, Amethyst—pick one and learn its API. Here's Rayfield:</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Raw UI (no library)
-local gui = Instance.new("ScreenGui", player.PlayerGui)
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-frame.BorderSizePixel = 0
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Rayfield (most common)
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
-local toggle = Instance.new("TextButton", frame)
-toggle.Size = UDim2.new(0, 200, 0, 40)
-toggle.Position = UDim2.new(0.5, -100, 0.5, -20)
-toggle.Text = "Toggle"
-toggle.BackgroundColor3 = Color3.fromRGB(168, 85, 247)
+local Window = Rayfield:CreateWindow({
+    Name = "My Hub",
+    LoadingTitle = "Loading...",
+    LoadingSubtitle = "by me",
+    ConfigurationSaving = { Enabled = false }
+})
 
-toggle.MouseButton1Click:Connect(function()
-    toggle.Text = toggle.Text == "Toggle" and "On" or "Toggle"
-end)`}</pre>
+local Tab = Window:CreateTab("Main", 4483362458) -- icon ID optional
+
+local Section = Tab:CreateSection("Controls")
+
+Section:CreateButton({
+    Name = "Click Me",
+    Callback = function()
+        print("pressed")
+    end
+})
+
+Section:CreateSlider({
+    Name = "Walk Speed",
+    Range = {16, 200},
+    Increment = 1,
+    CurrentValue = 16,
+    Callback = function(v)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+    end
+})
+
+Section:CreateToggle({
+    Name = "Auto-Farm",
+    CurrentValue = false,
+    Callback = function(v)
+        _G.AutoFarm = v
+    end
+})`}</pre>
               </div>
-              <p className="text-white/50 mb-4">But using a UI library is way cleaner:</p>
+              <p className="text-white/50 mb-4">If you want something lighter, Amethyst is cleaner and works on mobile:</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- OrionLib example (popular)
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "My Hub", HidePremium = false, SaveConfig = true})
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Amethyst (mobile-friendly, glass style)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/J0se-j/My-Lua-Library/main/Booting-the-library.lua"))()
+local Window = Library:CreateWindow({
+    Name = "Amethyst UI",
+    LoadingTitle = "Loading",
+    ToggleUIKeybind = Enum.KeyCode.K
+})
 
-local Tab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998"})
-
-Tab:AddButton({Name = "Click me", Callback = function()
-    print("button pressed")
-end})
-
-Tab:AddSlider({Name = "Speed", Min = 16, Max = 200, Default = 16, Callback = function(v)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
-end})`}</pre>
+local Tab = Window:CreateTab("Main", 4483362458)
+local Section = Tab:CreateSection("Controls")
+Section:CreateButton({ Name = "Test", Callback = function() print("hi") end })`}</pre>
               </div>
             </div>
           </>
         )}
 
-        {/* Moving Around */}
+        {/* Speed, Fly, Noclip */}
         {activeSection === "movement" && (
           <>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">Speed, Fly, Noclip, Teleport</h2>
-              <p className="text-white/50 mb-4">These are the bread and butter. Most games patch simple walkspeed changes, but fly and noclip usually work if done right.</p>
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Speed, Fly, Noclip</h2>
+              <p className="text-white/50 mb-4">WalkSpeed is obvious. Fly uses BodyVelocity + BodyGyro. Noclip just toggles CanCollide. Here's a clean fly script with keybinds:</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Fly (BodyVelocity method)
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Fly (WASD + Space/Shift, E/Q for up/down)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local root = char:WaitForChild("HumanoidRootPart")
-local humanoid = char:WaitForChild("Humanoid")
+local hum = char:WaitForChild("Humanoid")
+local uis = game:GetService("UserInputService")
 
 local flying = false
+local speed = 50
 local bodyGyro, bodyVel
 
 local function startFly()
@@ -750,16 +770,16 @@ local function startFly()
     
     flying = true
     while flying do
-        local dir = Vector3.zero
         local cam = workspace.CurrentCamera
-        local uis = game:GetService("UserInputService")
+        local dir = Vector3.zero
         if uis:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
         if uis:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
         if uis:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
         if uis:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-        if uis:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
-        if uis:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
-        bodyVel.Velocity = dir * 50
+        if uis:IsKeyDown(Enum.KeyCode.E) then dir += Vector3.new(0, 1, 0) end
+        if uis:IsKeyDown(Enum.KeyCode.Q) then dir -= Vector3.new(0, 1, 0) end
+        
+        bodyVel.Velocity = dir * speed
         root.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, cam.CFrame.LookVector.Y, 0)
         wait()
     end
@@ -768,76 +788,229 @@ local function startFly()
 end
 
 -- Noclip
-local function noclip(enabled)
+local function noclip(v)
     for _, part in pairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then part.CanCollide = not enabled end
+        if part:IsA("BasePart") then part.CanCollide = not v end
     end
-end`}</pre>
+end
+
+-- Bind to keys (example: F for fly, V for noclip)
+uis.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.F then
+        flying = not flying
+        if flying then startFly() end
+    elseif input.KeyCode == Enum.KeyCode.V then
+        noclip(true)
+    end
+end)`}</pre>
               </div>
-              <p className="text-white/40 text-sm">Teleporting is just setting the root part's CFrame:</p>
+              <p className="text-white/40 text-sm">Teleporting is simpler—just set the HumanoidRootPart's CFrame:</p>
               <div className="bg-black/60 border border-white/10 rounded-lg p-4">
                 <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Teleport to a player
-local target = game.Players:FindFirstChild("TargetName")
+local target = game.Players:FindFirstChild("SomeUsername")
 if target and target.Character then
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+    local root = target.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = root.CFrame
+    end
 end`}</pre>
               </div>
             </div>
           </>
         )}
 
-        {/* Not Getting Caught */}
+        {/* ESP & Player Info */}
+        {activeSection === "esp" && (
+          <>
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="font-display text-2xl font-bold text-white mb-4">ESP (Wallhacks)</h2>
+              <p className="text-white/50 mb-4">The easiest ESP uses Highlight instances. Roblox added these a while back—they're clean and don't require drawing boxes manually.</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Simple ESP with Highlight
+local function addESP(player)
+    if player == game.Players.LocalPlayer then return end
+    local function onCharAdded(char)
+        local highlight = Instance.new("Highlight")
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.Parent = char
+    end
+    if player.Character then onCharAdded(player.Character) end
+    player.CharacterAdded:Connect(onCharAdded)
+end
+
+for _, player in pairs(game.Players:GetPlayers()) do addESP(player) end
+game.Players.PlayerAdded:Connect(addESP)`}</pre>
+              </div>
+              <p className="text-white/50 mb-4">If you need more info (health, distance, team), you can add BillboardGuis:</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- ESP with name and distance
+local function createESP(player)
+    local billboard = Instance.new("BillboardGui")
+    billboard.AlwaysOnTop = true
+    billboard.Size = UDim2.new(0, 100, 0, 30)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    
+    local label = Instance.new("TextLabel", billboard)
+    label.Text = player.Name .. "\\n" .. math.floor((player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health) or 0) .. " HP"
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeTransparency = 0.5
+    
+    billboard.Parent = player.Character.Head
+end`}</pre>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Aim Assist */}
+        {activeSection === "aimbot" && (
+          <>
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Aim Assist (Legit Style)</h2>
+              <p className="text-white/50 mb-4">Don't use a snap aimbot—you'll get banned instantly. Soft aim with smoothing looks way more legit. This script uses raycasting to find the closest enemy and smoothly rotates your camera toward them.</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Soft aim assist (educational)
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local userInput = game:GetService("UserInputService")
+local camera = workspace.CurrentCamera
+local localPlayer = players.LocalPlayer
+
+local aimbotEnabled = false
+local fovRadius = 150
+local smoothing = 0.3
+
+local function getClosestEnemy()
+    local closest = nil
+    local shortestDist = fovRadius
+    
+    for _, player in pairs(players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local screenPos, onScreen = camera:WorldToScreenPoint(head.Position)
+            if onScreen then
+                local dist = (Vector2.new(screenPos.X, screenPos.Y) - camera.ViewportSize/2).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = head
+                end
+            end
+        end
+    end
+    return closest
+end
+
+runService.RenderStepped:Connect(function()
+    if not aimbotEnabled then return end
+    local target = getClosestEnemy()
+    if target then
+        local targetPos = target.Position
+        local camPos = camera.CFrame.Position
+        local lookAt = CFrame.new(camPos, targetPos)
+        camera.CFrame = camera.CFrame:Lerp(lookAt, smoothing)
+    end
+end)
+
+-- Toggle with key (e.g., L)
+userInput.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.L then
+        aimbotEnabled = not aimbotEnabled
+    end
+end)`}</pre>
+              </div>
+              <p className="text-white/40 text-sm">This won't work in every game—some have custom camera handling. But it's a solid foundation.</p>
+            </div>
+          </>
+        )}
+
+        {/* Auto-Farm */}
+        {activeSection === "autofarm" && (
+          <>
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Auto-Farming Basics</h2>
+              <p className="text-white/50 mb-4">Auto‑farm usually means detecting enemies/mobs/items and interacting with them. Here's a generic loop that finds the nearest NPC and attacks it.</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Simple auto-farm loop
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local root = char:WaitForChild("HumanoidRootPart")
+
+_G.AutoFarm = false
+
+coroutine.wrap(function()
+    while true do
+        if _G.AutoFarm then
+            local nearest = nil
+            local shortest = 50
+            for _, v in pairs(workspace:GetChildren()) do
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v ~= char then
+                    local dist = (v:FindFirstChild("HumanoidRootPart") or v:FindFirstChild("Torso")).Position - root.Position).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        nearest = v
+                    end
+                end
+            end
+            if nearest then
+                -- move to enemy
+                root.CFrame = nearest.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                -- attack (game-specific)
+                local args = { [1] = "Attack" }
+                game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Combat"):FireServer(unpack(args))
+            end
+        end
+        wait(0.1)
+    end
+end)()`}</pre>
+              </div>
+              <p className="text-white/40 text-sm">You'll need to adapt this for each game—find the right remote names and NPC detection logic.</p>
+            </div>
+          </>
+        )}
+
+        {/* Staying Undetected */}
         {activeSection === "bypass" && (
           <>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">Staying undetected</h2>
-              <p className="text-white/50 mb-4">Byfron anti-cheat (the thing that detects executors) runs on most games now. You can't bypass it with Lua alone — that's on the executor devs. But you can avoid server-side detection by not being obvious.</p>
-              <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Hook a remote to see what it sends
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Not Getting Flagged</h2>
+              <p className="text-white/50 mb-4">Byfron (Roblox's anti‑cheat) runs client‑side and detects injection methods. You can't bypass that with Lua—that's on your executor. But you can avoid server‑side bans by not being obvious.</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Hook a remote to see what it sends (for debugging)
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
     local args = {...}
-    print("Remote called:", self.Name, method, unpack(args))
+    if method == "FireServer" then
+        print("Remote fired:", self.Name, unpack(args))
+    end
     return oldNamecall(self, ...)
 end)
 
--- Block a specific remote (dangerous, can desync)
-local old
-old = hookfunction(Instance.new("RemoteEvent").FireServer, function(self, ...)
+-- Block a specific remote (risky, can desync)
+local oldFire = hookfunction(Instance.new("RemoteEvent").FireServer, function(self, ...)
     if self.Name == "BanPlayer" then return end
-    return old(self, ...)
+    return oldFire(self, ...)
 end)`}</pre>
               </div>
-              <p className="text-white/40 text-sm">These are educational. Using them will likely get you banned if the game has a decent anti-cheat.</p>
-            </div>
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h3 className="font-display text-xl font-bold text-white mb-3">Silent Aim / Hitbox Expander</h3>
-              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Expand hitboxes (works in some games)
-for _, player in pairs(game.Players:GetPlayers()) do
-    if player ~= game.Players.LocalPlayer and player.Character then
-        for _, part in pairs(player.Character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.Size = part.Size * 2
-                part.Transparency = 0.5
-            end
-        end
-    end
-end`}</pre>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <p className="text-amber-400/80 text-sm">⚠️ Hooking metamethods is advanced. If you don't know what you're doing, you'll crash your game or get flagged faster.</p>
               </div>
             </div>
           </>
         )}
 
-        {/* Breaking Stuff */}
+        {/* Lag & Server Stuff */}
         {activeSection === "lag" && (
           <>
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">Lag switches & server crashers</h2>
-              <p className="text-white/50 mb-4">These are toxic and can get you hardware banned. Only use in private servers or games you own.</p>
-              <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Remote spammer (may crash server)
+              <h2 className="font-display text-2xl font-bold text-white mb-4">Lag Switches & Server Manipulation</h2>
+              <p className="text-white/50 mb-4">Real lag switches are external tools that block network traffic. Lua‑only "lag" is usually just remote spam or physics overload.</p>
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
+                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Remote spam (may crash server if unpatched)
 local remote = game:GetService("ReplicatedStorage"):FindFirstChild("SomeRemote")
 if remote then
     while true do
@@ -846,56 +1019,16 @@ if remote then
     end
 end
 
--- Client-side lag (requires external tool)
--- Use a firewall to block RobloxPlayerBeta.exe for 1 second then unblock
--- Many executors have built-in lag switch features.`}</pre>
-              </div>
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                <p className="text-amber-400/80 text-sm">⚠️ This is how you get your account deleted. Don't be that guy.</p>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Extra Tricks */}
-        {activeSection === "extra" && (
-          <>
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h2 className="font-display text-2xl font-bold text-white mb-4">ESP, Auto Farm, and More</h2>
-              <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Simple ESP (draw boxes around players)
-local function createESP(player)
-    local highlight = Instance.new("Highlight")
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.Parent = player.Character
-end
-
-for _, player in pairs(game.Players:GetPlayers()) do
-    if player ~= game.Players.LocalPlayer then
-        player.CharacterAdded:Connect(function(char)
-            createESP(player)
-        end)
-        if player.Character then createESP(player) end
-    end
-end
-
--- Auto farm (example: click a button repeatedly)
-local button = workspace:FindFirstChild("FarmButton", true)
-while true do
-    if button then
-        fireclickdetector(button.ClickDetector)
-    end
-    wait(0.5)
+-- Physics overload (create hundreds of parts)
+local part = Instance.new("Part")
+part.Size = Vector3.new(1, 1, 1)
+part.Anchored = true
+for i = 1, 1000 do
+    part:Clone().Parent = workspace
 end`}</pre>
               </div>
-            </div>
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6">
-              <h3 className="font-display text-xl font-bold text-white mb-3">Script Hubs & Loadstrings</h3>
-              <p className="text-white/50 mb-4">Many games have pre-made script hubs. You just paste a loadstring and it gives you a full GUI with all features.</p>
-              <div className="bg-black/60 border border-white/10 rounded-lg p-4">
-                <pre className="text-xs text-white/60 whitespace-pre-wrap">{`-- Example: load a Blox Fruits script
-loadstring(game:HttpGet("https://raw.githubusercontent.com/SomeHub/BloxFruits/main.lua"))()`}</pre>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <p className="text-amber-400/80 text-sm">Don't be that guy. This is how you get hardware banned. Use only in private servers.</p>
               </div>
             </div>
           </>
@@ -909,7 +1042,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/SomeHub/BloxFruits/ma
   )
 }
 
-// --- UpdatesPage (unchanged) ---
 function UpdatesPage() {
   return (
     <div className="min-h-screen pt-28 pb-20 px-6 max-w-3xl mx-auto">
@@ -944,7 +1076,6 @@ function UpdatesPage() {
   )
 }
 
-// --- Main Page (light rays removed) ---
 export default function Page() {
   const [page, setPage] = useState("home")
   return (
