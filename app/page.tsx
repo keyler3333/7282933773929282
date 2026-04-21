@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Copy, Check, X, Search, Menu, XIcon, Clock } from "lucide-react"
+import {
+  Zap, RefreshCw, Shield, Search, Copy, Check, X,
+  ExternalLink, Menu, XIcon, Clock, ArrowRight, Code2,
+  Sword, Wheat, Wrench, Star
+} from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import * as THREE from "three"
 
@@ -10,124 +14,119 @@ const LOGO_URL = "https://i.postimg.cc/pLjwZ938/114A3ACE-CAC7-45B3-AB50-FDF67970
 
 const UNIVERSE_IDS: Record<string, number> = {
   "Combat Warriors": 2699330604,
-  "Blox Fruits": 2753915549,
-  "Arsenal": 286090429,
+  "Blox Fruits":     2753915549,
+  "Arsenal":         286090429,
   "Pet Simulator 99": 8737899170,
-  "DOORS": 6516141723,
-  "Brookhaven RP": 4924922222,
+  "DOORS":           6516141723,
+  "Brookhaven RP":   4924922222,
 }
 
 const SCRIPTS = [
   {
-    id: 1, name: "Auto-Farm", game: "Combat Warriors",
-    category: "Combat", updated: "Apr 18, 2026", tag: "HOT",
-    code: `-- Combat Warriors Auto-Farm\nlocal Players = game:GetService("Players")\nlocal LocalPlayer = Players.LocalPlayer\n\nlocal config = {\n    autoFarm = true,\n    autoCollect = true,\n    safeMode = true\n}\n\nprint("[XZX HUB] Script Loaded")`
+    id: 1, name: "Combat Warriors Auto-Farm", game: "Combat Warriors",
+    category: "Combat", updated: "Apr 18, 2026", tag: "HOT", tagColor: "#f43f5e",
+    code: `-- Combat Warriors Auto-Farm v3.2\nlocal Players = game:GetService("Players")\nlocal LocalPlayer = Players.LocalPlayer\n\nlocal config = {\n    autoFarm = true,\n    autoCollect = true,\n    safeMode = true\n}\n\nprint("[XZX HUB] Loaded")`
   },
   {
-    id: 2, name: "Devil Fruit Sniper", game: "Blox Fruits",
-    category: "Farming", updated: "Apr 17, 2026", tag: "NEW",
-    code: `-- Blox Fruits Devil Fruit Sniper\nlocal ReplicatedStorage = game:GetService("ReplicatedStorage")\n\nlocal function snipeFruit()\n    -- snipe logic\nend\n\nprint("[XZX HUB] Sniper Active")`
+    id: 2, name: "Blox Fruits Devil Fruit Sniper", game: "Blox Fruits",
+    category: "Farming", updated: "Apr 17, 2026", tag: "NEW", tagColor: "#22c55e",
+    code: `-- Blox Fruits Devil Fruit Sniper v1.9\nlocal ReplicatedStorage = game:GetService("ReplicatedStorage")\n\nlocal function snipeFruit()\n    -- snipe logic\nend\n\nprint("[XZX HUB] Sniper Active")`
   },
   {
-    id: 3, name: "Aimbot & ESP", game: "Arsenal",
-    category: "Combat", updated: "Apr 16, 2026", tag: "HOT",
-    code: `-- Arsenal ESP\nlocal RunService = game:GetService("RunService")\n\nlocal ESP = {\n    Enabled = true,\n    BoxESP = true,\n    NameESP = true,\n}\n\nprint("[XZX HUB] ESP Active")`
+    id: 3, name: "Arsenal Aimbot & ESP", game: "Arsenal",
+    category: "Combat", updated: "Apr 16, 2026", tag: "HOT", tagColor: "#f43f5e",
+    code: `-- Arsenal ESP v2.5\nlocal RunService = game:GetService("RunService")\n\nlocal ESP = { Enabled = true, BoxESP = true, NameESP = true }\n\nprint("[XZX HUB] ESP Loaded")`
   },
   {
-    id: 4, name: "Auto Collect", game: "Pet Simulator 99",
-    category: "Farming", updated: "Apr 15, 2026", tag: "UPDATED",
-    code: `-- Pet Sim 99 Auto Collect\nlocal TweenService = game:GetService("TweenService")\n\nlocal function autoCollect()\n    -- collect logic\nend\n\nprint("[XZX HUB] Auto Collect On")`
+    id: 4, name: "Pet Simulator Auto Collect", game: "Pet Simulator 99",
+    category: "Farming", updated: "Apr 15, 2026", tag: "UPDATED", tagColor: "#f59e0b",
+    code: `-- Pet Sim 99 Auto Collect v4.1\nlocal TweenService = game:GetService("TweenService")\n\nlocal function autoCollect()\n    -- collect logic\nend\n\nprint("[XZX HUB] Auto Collect On")`
   },
   {
-    id: 5, name: "Entity ESP & Skip", game: "DOORS",
-    category: "Utility", updated: "Apr 14, 2026", tag: "NEW",
-    code: `-- DOORS Entity Skip\nlocal Players = game:GetService("Players")\n\nlocal config = {\n    EntityESP = true,\n    AutoSkip = true,\n}\n\nprint("[XZX HUB] DOORS Script On")`
+    id: 5, name: "Doors Entity ESP & Skip", game: "DOORS",
+    category: "Utility", updated: "Apr 14, 2026", tag: "NEW", tagColor: "#22c55e",
+    code: `-- DOORS Entity Skip v1.2\nlocal Players = game:GetService("Players")\n\nlocal config = { EntityESP = true, AutoSkip = true }\n\nprint("[XZX HUB] DOORS Script On")`
   },
   {
-    id: 6, name: "Utility Panel", game: "Brookhaven RP",
-    category: "Utility", updated: "Apr 12, 2026", tag: "STABLE",
-    code: `-- Brookhaven Utility Panel\nlocal StarterGui = game:GetService("StarterGui")\n\nlocal utils = {\n    NoClip = false,\n    Speed = 16,\n    Fly = false\n}\n\nprint("[XZX HUB] Panel Ready")`
+    id: 6, name: "Brookhaven Utility Panel", game: "Brookhaven RP",
+    category: "Utility", updated: "Apr 12, 2026", tag: "STABLE", tagColor: "#818cf8",
+    code: `-- Brookhaven Utility Panel v3.0\nlocal StarterGui = game:GetService("StarterGui")\n\nlocal utils = { NoClip = false, Speed = 16, Fly = false }\n\nprint("[XZX HUB] Panel Ready")`
   },
 ]
 
 const CHANGELOG = [
   {
-    version: "v2.5.0", date: "April 18, 2026", label: "MAJOR",
+    version: "v2.5.0", date: "April 18, 2026", label: "MAJOR", labelColor: "#818cf8",
     changes: [
-      "added combat warriors auto-farm with new anti-detection pass",
-      "new ui overlay — way cleaner, less intrusive",
-      "xzx executor v4 compat fully working now",
-      "farming scripts noticeably faster (~40% improvement)",
+      "Combat Warriors auto-farm — new anti-detection pass included",
+      "UI overlay rebuilt, way less intrusive now",
+      "XZX Executor v4 compat working",
+      "Farming scripts ~40% faster across the board",
     ]
   },
   {
-    version: "v2.4.3", date: "April 14, 2026", label: "PATCH",
+    version: "v2.4.3", date: "April 14, 2026", label: "PATCH", labelColor: "#22c55e",
     changes: [
-      "fixed blox fruits crash on server hop",
-      "arsenal esp rendering bug on low-end devices is gone",
-      "mobile text rendering fix",
+      "Fixed Blox Fruits crash on server hop",
+      "Arsenal ESP rendering bug on low-end devices",
+      "Mobile text rendering cleanup",
     ]
   },
   {
-    version: "v2.4.0", date: "April 9, 2026", label: "UPDATE",
+    version: "v2.4.0", date: "April 9, 2026", label: "UPDATE", labelColor: "#818cf8",
     changes: [
-      "doors entity esp fully rewritten from scratch",
-      "added brookhaven utility panel (you guys kept asking)",
-      "script loader 60% faster to load now",
-      "new hub site shipped",
+      "DOORS entity ESP fully rewritten",
+      "Brookhaven utility panel added (community request)",
+      "Script loader 60% faster",
+      "New hub site live",
     ]
   },
   {
-    version: "v2.3.1", date: "March 28, 2026", label: "PATCH",
+    version: "v2.3.1", date: "March 28, 2026", label: "PATCH", labelColor: "#22c55e",
     changes: [
-      "pet sim 99 updated for latest game patch",
-      "fixed memory leak in long farm sessions",
+      "Pet Sim 99 updated for latest patch",
+      "Memory leak fix in long farm sessions",
     ]
   },
   {
-    version: "v2.3.0", date: "March 20, 2026", label: "UPDATE",
+    version: "v2.3.0", date: "March 20, 2026", label: "UPDATE", labelColor: "#818cf8",
     changes: [
-      "script vault system introduced",
-      "version badges and update timestamps added",
-      "discord bot sends instant script update pings",
-      "5 new scripts added across combat and farming",
+      "Script vault system launched",
+      "Version badges + update timestamps added",
+      "Discord bot now pings on script updates",
+      "5 new scripts across combat and farming",
     ]
   },
 ]
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-const TAG_COLORS: Record<string, string> = {
-  HOT: "#e8002a",
-  NEW: "#16a34a",
-  UPDATED: "#d97706",
-  STABLE: "#6366f1",
-}
-
-function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
-  const [imgUrl, setImgUrl] = useState<string | null>(null)
-  const [failed, setFailed] = useState(false)
+// ── Real Roblox thumbnail via API ──────────────────────────────────────────────
+function GameThumbnail({
+  game, className = ""
+}: { game: string; className?: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+  const [err, setErr] = useState(false)
   const uid = UNIVERSE_IDS[game]
 
   useEffect(() => {
-    if (!uid) { setFailed(true); return }
-    fetch(
-      `https://thumbnails.roblox.com/v1/games/icons?universeIds=${uid}&size=150x150&format=Png&isCircular=false`
-    )
+    if (!uid) { setErr(true); return }
+    fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${uid}&size=150x150&format=Png&isCircular=false`)
       .then(r => r.json())
       .then(d => {
-        const url = d?.data?.[0]?.imageUrl
-        if (url) setImgUrl(url)
-        else setFailed(true)
+        const img = d?.data?.[0]?.imageUrl
+        if (img) setUrl(img)
+        else setErr(true)
       })
-      .catch(() => setFailed(true))
+      .catch(() => setErr(true))
   }, [uid])
 
-  if (failed || !imgUrl) {
+  if (err || !url) {
+    // styled fallback — never a broken image icon
     return (
-      <div className={`flex items-center justify-center bg-[#111] border-r border-[#1e1e1e] ${className}`}>
-        <span className="font-mono text-[10px] text-[#333] uppercase tracking-widest select-none">
-          {game.slice(0, 3)}
+      <div className={`flex items-center justify-center bg-[#0d0d14] ${className}`}>
+        <span className="text-[11px] font-bold text-white/20 uppercase tracking-widest select-none">
+          {game.split(" ").map(w => w[0]).join("").slice(0, 3)}
         </span>
       </div>
     )
@@ -135,313 +134,396 @@ function GameThumbnail({ game, className = "" }: { game: string; className?: str
 
   return (
     <img
-      src={imgUrl}
+      src={url}
       alt={game}
-      onError={() => setFailed(true)}
+      onError={() => setErr(true)}
       className={`object-cover ${className}`}
     />
   )
 }
 
+// ── Particles ──────────────────────────────────────────────────────────────────
 function ParticleField() {
-  const count = 1200
-  const pointsRef = useRef<THREE.Points>(null)
-  const mouseRef = useRef({ x: 0, y: 0 })
+  const count = 1400
+  const ref = useRef<THREE.Points>(null)
+  const mouse = useRef({ x: 0, y: 0 })
   const clock = useRef(new THREE.Clock())
-
-  const particles = useRef({
-    positions: new Float32Array(count * 3),
-    colors: new Float32Array(count * 3),
+  const buf = useRef({
+    pos: new Float32Array(count * 3),
+    col: new Float32Array(count * 3),
   })
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+    const mv = (e: MouseEvent) => {
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1
     }
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mousemove", mv)
+    return () => window.removeEventListener("mousemove", mv)
   }, [])
 
   useEffect(() => {
-    const pos = particles.current.positions
-    const col = particles.current.colors
+    const { pos, col } = buf.current
     for (let i = 0; i < count; i++) {
       const r = 3 + Math.random() * 5
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      pos[i * 3] = Math.sin(phi) * Math.cos(theta) * r
-      pos[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * r
-      pos[i * 3 + 2] = Math.cos(phi) * r
-      const isRed = Math.random() < 0.06
-      const b = 0.3 + Math.random() * 0.5
-      col[i * 3] = isRed ? 0.9 : b
-      col[i * 3 + 1] = isRed ? 0.05 : b
-      col[i * 3 + 2] = isRed ? 0.05 : b
+      const t = Math.random() * Math.PI * 2
+      const p = Math.acos(2 * Math.random() - 1)
+      pos[i*3]   = Math.sin(p)*Math.cos(t)*r
+      pos[i*3+1] = Math.sin(p)*Math.sin(t)*r
+      pos[i*3+2] = Math.cos(p)*r
+      // violet-tinted particles
+      const isAccent = Math.random() < 0.1
+      const b = 0.35 + Math.random() * 0.45
+      col[i*3]   = isAccent ? 0.55 : b
+      col[i*3+1] = isAccent ? 0.35 : b
+      col[i*3+2] = isAccent ? 0.95 : b
     }
   }, [])
 
   useFrame(() => {
-    if (!pointsRef.current) return
-    const time = clock.current.getElapsedTime()
-    const geo = pointsRef.current.geometry
-    const pa = geo.attributes.position
+    if (!ref.current) return
+    const t = clock.current.getElapsedTime()
+    const pa = ref.current.geometry.attributes.position
     const pos = pa.array as Float32Array
-    const m = mouseRef.current
+    const m = mouse.current
     for (let i = 0; i < count; i++) {
-      const i3 = i * 3
-      const x = pos[i3], y = pos[i3 + 1], z = pos[i3 + 2]
-      pos[i3] += (x + m.x * 1.5) * 0.001
-      pos[i3 + 1] += (y + m.y * 1.5) * 0.001
-      pos[i3 + 2] += (z + Math.sin(time * 0.2 + x) * 0.1 - z) * 0.001
-      const dist = Math.sqrt(x * x + y * y + z * z)
-      if (dist > 8) {
-        pos[i3] *= 0.99
-        pos[i3 + 1] *= 0.99
-        pos[i3 + 2] *= 0.99
+      const i3 = i*3
+      const x = pos[i3], y = pos[i3+1], z = pos[i3+2]
+      pos[i3]   += (x + m.x*1.5)*0.001
+      pos[i3+1] += (y + m.y*1.5)*0.001
+      pos[i3+2] += (z + Math.sin(t*0.2+x)*0.1 - z)*0.001
+      if (Math.sqrt(x*x+y*y+z*z) > 8) {
+        pos[i3]*=0.99; pos[i3+1]*=0.99; pos[i3+2]*=0.99
       }
     }
     pa.needsUpdate = true
-    pointsRef.current.rotation.y += 0.0004
+    ref.current.rotation.y += 0.0004
   })
 
   return (
-    <points ref={pointsRef}>
+    <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={particles.current.positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={particles.current.colors} itemSize={3} />
+        <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
+        <bufferAttribute attach="attributes-color"    count={count} array={buf.current.col} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.022} vertexColors transparent blending={THREE.AdditiveBlending} depthWrite={false} opacity={0.7} />
+      <pointsMaterial size={0.024} vertexColors transparent blending={THREE.AdditiveBlending} depthWrite={false} opacity={0.75} />
     </points>
   )
 }
 
+// ── Navbar ─────────────────────────────────────────────────────────────────────
 function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30)
+    const fn = () => setScrolled(window.scrollY > 20)
     window.addEventListener("scroll", fn)
     return () => window.removeEventListener("scroll", fn)
   }, [])
 
-  const links = [["home", "Home"], ["scripts", "Scripts"], ["updates", "Updates"]]
+  const links: [string, string][] = [["home","Home"],["scripts","Scripts"],["updates","Updates"]]
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-[#060606]/95 border-b border-[#1c1c1c]" : "bg-transparent"}`}>
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-        <button onClick={() => setPage("home")} className="flex items-center gap-2.5">
-          <img src={LOGO_URL} alt="XZX" className="w-8 h-8 rounded object-cover" />
-          <span className="font-display text-[15px] font-bold tracking-wider text-white">
-            XZX<span className="text-[#e8002a]">.</span>HUB
-          </span>
-        </button>
+    <motion.nav
+      initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}
+      className="fixed top-0 left-0 right-0 z-50 px-5"
+    >
+      <div className={`mx-auto max-w-6xl mt-3 rounded-2xl transition-all duration-300 ${
+        scrolled
+          ? "bg-[#07070f]/85 backdrop-blur-2xl border border-white/10 shadow-xl shadow-black/40"
+          : "bg-[#07070f]/40 backdrop-blur-md border border-white/5"
+      }`}>
+        <div className="flex items-center justify-between px-5 py-3.5">
+          {/* Logo */}
+          <button onClick={() => setPage("home")} className="flex items-center gap-3 group">
+            <div className="relative w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 group-hover:ring-violet-500/40 transition-all">
+              <img src={LOGO_URL} alt="XZX" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-display text-[17px] font-bold tracking-wide text-white">
+              XZX <span className="text-white/30">HUB</span>
+            </span>
+          </button>
 
-        <div className="hidden md:flex items-center gap-7">
-          {links.map(([p, label]) => (
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-1">
+            {links.map(([p, label]) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`relative px-4 py-1.5 rounded-lg font-display font-semibold text-[13px] tracking-wide transition-colors ${
+                  page === p ? "text-white bg-white/8" : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                {label}
+                {page === p && (
+                  <motion.div
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-lg bg-white/8 -z-10"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
             <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`font-mono text-xs tracking-widest uppercase transition-colors ${
-                page === p ? "text-white" : "text-[#555] hover:text-[#aaa]"
-              }`}
+              onClick={() => setPage("scripts")}
+              className="bg-violet-600 hover:bg-violet-500 text-white font-display font-bold text-[12px] tracking-widest uppercase px-4 py-2 rounded-lg transition-colors"
             >
-              {page === p && <span className="text-[#e8002a] mr-1">▸</span>}{label}
+              Get Scripts
             </button>
-          ))}
+          </div>
+
+          <button onClick={() => setOpen(!open)} className="md:hidden text-white/60 hover:text-white transition-colors">
+            {open ? <XIcon size={20} /> : <Menu size={20} />}
+          </button>
         </div>
 
-        <button
-          onClick={() => setPage("scripts")}
-          className="hidden md:flex items-center gap-1.5 bg-[#e8002a] hover:bg-[#c0001f] text-white font-mono text-[11px] tracking-widest uppercase px-4 py-2 transition-colors"
-        >
-          Get Scripts
-        </button>
-
-        <button onClick={() => setOpen(!open)} className="md:hidden text-[#aaa] hover:text-white transition-colors">
-          {open ? <XIcon size={18} /> : <Menu size={18} />}
-        </button>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-white/8 overflow-hidden"
+            >
+              <div className="flex flex-col gap-1 p-4">
+                {links.map(([p, label]) => (
+                  <button
+                    key={p}
+                    onClick={() => { setPage(p); setOpen(false) }}
+                    className={`text-left px-3 py-2 rounded-lg font-display font-semibold text-[13px] tracking-wide transition-colors ${
+                      page === p ? "text-white bg-white/8" : "text-white/40"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#060606] border-t border-[#1c1c1c]"
-          >
-            <div className="flex flex-col px-6 py-4 gap-4">
-              {links.map(([p, label]) => (
-                <button
-                  key={p}
-                  onClick={() => { setPage(p); setOpen(false) }}
-                  className={`text-left font-mono text-xs tracking-widest uppercase ${page === p ? "text-white" : "text-[#555]"}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+    </motion.nav>
   )
 }
 
+// ── Home ───────────────────────────────────────────────────────────────────────
 function HomePage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div className="min-h-screen">
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
-            <Suspense fallback={null}>
-              <ParticleField />
-            </Suspense>
+            <Suspense fallback={null}><ParticleField /></Suspense>
           </Canvas>
         </div>
-        <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#060606]/50 via-transparent to-[#060606]" />
-        <div className="scanlines absolute inset-0 z-0 pointer-events-none" />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 w-full">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex items-center gap-3 mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
-              <span className="font-mono text-[11px] tracking-widest text-[#555] uppercase">All scripts undetected — updated Apr 18</span>
+        {/* gradient fade */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#07070f]/70 via-[#07070f]/30 to-[#07070f]" />
+        {/* subtle vignette */}
+        <div className="absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, #07070f 100%)" }} />
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 pt-20 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 mb-8 backdrop-blur-sm"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-display text-[11px] font-semibold tracking-widest text-white/50 uppercase">
+              All scripts undetected — updated daily
+            </span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="flex justify-center mb-7"
+          >
+            <div className="relative w-24 h-24 rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-violet-900/30">
+              <img src={LOGO_URL} alt="XZX HUB" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent" />
             </div>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.08 }}
-            className="font-display text-[clamp(52px,10vw,120px)] font-bold leading-none mb-6 tracking-tight"
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="font-display text-[clamp(48px,9vw,96px)] font-bold leading-none tracking-tight mb-5"
           >
-            <span className="text-white">XZX</span>
-            <span className="text-[#e8002a]">.</span>
-            <span className="text-white">HUB</span>
+            <span className="text-white">XZX HUB</span>
             <br />
-            <span className="text-[#2a2a2a] text-[clamp(20px,4vw,48px)] font-normal tracking-normal">
-              scripts that actually work.
+            <span className="text-white/20 text-[clamp(22px,4vw,44px)] font-medium tracking-normal">
+              the scripts actually work.
             </span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.18 }}
-            className="font-mono text-[13px] text-[#555] max-w-md mb-10 leading-relaxed"
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-white/40 text-[15px] max-w-lg mx-auto mb-10 leading-relaxed font-display"
           >
-            updated within hours of patches. no premium bs. no bloat. just the scripts.
+            Updated within hours of patches. Clean loader. No bloat. Just the scripts.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.26 }}
-            className="flex flex-wrap gap-3"
+            transition={{ duration: 0.6, delay: 0.28 }}
+            className="flex flex-wrap gap-3 justify-center mb-16"
           >
             <button
               onClick={() => setPage("scripts")}
-              className="flex items-center gap-2 bg-[#e8002a] hover:bg-[#c0001f] text-white font-mono text-[12px] tracking-widest uppercase px-6 py-3 transition-colors"
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-display font-bold text-[13px] tracking-wider px-7 py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-violet-900/40 group"
             >
-              View Scripts →
+              View Scripts <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
             </button>
             <a
               href="https://discord.gg"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 border border-[#2a2a2a] hover:border-[#444] text-[#aaa] hover:text-white font-mono text-[12px] tracking-widest uppercase px-6 py-3 transition-colors"
+              className="flex items-center gap-2 border border-white/10 hover:border-white/20 text-white/50 hover:text-white/80 font-display font-bold text-[13px] tracking-wider px-7 py-3 rounded-xl transition-all"
             >
-              Discord ↗
+              <ExternalLink size={14} /> Discord
             </a>
           </motion.div>
-        </div>
 
-        <div className="absolute left-0 top-1/4 bottom-1/4 w-px bg-gradient-to-b from-transparent via-[#e8002a]/40 to-transparent hidden md:block" />
-      </section>
-
-      <section className="py-28 px-6 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="font-mono text-[10px] tracking-widest text-[#e8002a] uppercase mb-4 block">/ about</span>
-            <h2 className="font-display text-[clamp(32px,5vw,52px)] font-bold text-white leading-tight mb-6">
-              made for the<br />
-              <span className="text-[#333]">community.</span>
-            </h2>
-            <p className="font-mono text-[13px] text-[#555] leading-relaxed mb-4">
-              we've been doing this for a while. scripts get updated fast, the hub stays clean, and we actually test stuff before pushing it live.
-            </p>
-            <p className="font-mono text-[13px] text-[#555] leading-relaxed">
-              no inflated script counts. no fake uptime numbers. just {SCRIPTS.length} solid scripts that work.
-            </p>
-          </motion.div>
-
+          {/* stats row */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="grid grid-cols-2 gap-px bg-[#1c1c1c] border border-[#1c1c1c]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.38 }}
+            className="flex flex-wrap gap-10 justify-center"
           >
-            {[
-              { n: "50+", l: "scripts" },
-              { n: "< 24h", l: "patch response" },
-              { n: "10k+", l: "users" },
-              { n: "6", l: "supported games" },
-            ].map(({ n, l }) => (
-              <div key={l} className="bg-[#060606] p-8">
-                <div className="font-display text-3xl font-bold text-white mb-1">{n}</div>
-                <div className="font-mono text-[10px] tracking-widest text-[#444] uppercase">{l}</div>
+            {[["50+","Scripts"],["< 24h","Patch fix"],["10k+","Users"],["6","Games"]].map(([v, l]) => (
+              <div key={l} className="text-center">
+                <div className="font-display text-2xl font-bold text-white">{v}</div>
+                <div className="font-display text-[10px] tracking-widest text-white/25 uppercase mt-0.5">{l}</div>
               </div>
             ))}
           </motion.div>
         </div>
       </section>
 
-      <section className="py-16 px-6 max-w-6xl mx-auto border-t border-[#111]">
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="mb-12">
-          <span className="font-mono text-[10px] tracking-widest text-[#e8002a] uppercase">/ why xzx</span>
+      {/* About */}
+      <section className="py-28 px-6 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid md:grid-cols-2 gap-14 items-center"
+        >
+          <div>
+            <span className="font-display text-[11px] tracking-widest text-violet-400 uppercase border border-violet-500/20 px-3 py-1 rounded-full">
+              About
+            </span>
+            <h2 className="font-display text-[clamp(30px,4vw,48px)] font-bold text-white mt-5 mb-5 leading-tight">
+              Made by players,<br />
+              <span className="text-white/25">kept running for them.</span>
+            </h2>
+            <p className="text-white/40 text-[15px] mb-4 leading-relaxed font-display">
+              We've been at this for a while. Scripts get updated fast, the hub stays clean, and stuff actually gets tested before it goes live.
+            </p>
+            <p className="text-white/40 text-[15px] leading-relaxed font-display">
+              No inflated numbers. No fake uptime stats. Just {SCRIPTS.length} scripts that do what they say.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: <Code2 size={18} />, label: "Clean Code", sub: "No bloat. Lightweight loader." },
+              { icon: <Shield size={18} />, label: "Undetected", sub: "Passes detection on every release." },
+              { icon: <RefreshCw size={18} />, label: "Fast Updates", sub: "Most patches fixed in under a day." },
+              { icon: <Star size={18} />, label: "Tested Live", sub: "Every script runs before it ships." },
+            ].map(({ icon, label, sub }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-white/[0.03] border border-white/8 rounded-2xl p-5 hover:border-violet-500/20 hover:bg-white/[0.05] transition-all"
+              >
+                <div className="text-violet-400 mb-3">{icon}</div>
+                <div className="font-display font-bold text-[14px] text-white mb-1">{label}</div>
+                <div className="font-display text-[12px] text-white/30">{sub}</div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
-        <div className="grid md:grid-cols-3 gap-px bg-[#1c1c1c] border border-[#1c1c1c]">
+      </section>
+
+      {/* Why */}
+      <section className="py-16 px-6 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <span className="font-display text-[11px] tracking-widest text-violet-400 uppercase border border-violet-500/20 px-3 py-1 rounded-full">
+            Why XZX
+          </span>
+          <h2 className="font-display text-[clamp(28px,4vw,42px)] font-bold text-white mt-5">
+            What actually makes it good.
+          </h2>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-4">
           {[
-            { n: "01", t: "Fast Execution", d: "loads fast, runs clean. lightweight loader that doesn't tank your fps." },
-            { n: "02", t: "Patch-Proof", d: "we watch for game updates constantly. most scripts are fixed in under a day." },
-            { n: "03", t: "Undetected", d: "anti-detection is built in. we don't push scripts until they pass our checks." },
-          ].map(({ n, t, d }, i) => (
+            { icon: <Zap size={26} />, t: "Fast Execution", d: "Loads fast, runs clean. The loader stays out of the way and doesn't spike your frame time." },
+            { icon: <RefreshCw size={26} />, t: "Patch-Proof Updates", d: "We watch for game patches constantly. Most scripts are back up within a few hours of a break." },
+            { icon: <Shield size={26} />, t: "Undetected", d: "Anti-detection is built into every script. Nothing gets pushed until it clears our checks." },
+          ].map(({ icon, t, d }, i) => (
             <motion.div
-              key={n}
-              initial={{ opacity: 0, y: 16 }}
+              key={t}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="bg-[#060606] p-8 group hover:bg-[#0a0a0a] transition-colors"
+              transition={{ delay: i * 0.1 }}
+              className="bg-white/[0.03] border border-white/8 rounded-2xl p-7 hover:border-violet-500/20 hover:bg-white/[0.05] transition-all group"
             >
-              <div className="font-mono text-[10px] text-[#333] mb-4">{n}</div>
-              <h3 className="font-display text-lg font-bold text-white mb-3 group-hover:text-[#e8002a] transition-colors">{t}</h3>
-              <p className="font-mono text-[12px] text-[#555] leading-relaxed">{d}</p>
+              <div className="w-11 h-11 bg-violet-500/10 rounded-xl flex items-center justify-center text-violet-400 mb-5 group-hover:bg-violet-500/15 transition-colors">
+                {icon}
+              </div>
+              <h3 className="font-display text-[18px] font-bold text-white mb-2">{t}</h3>
+              <p className="font-display text-[13px] text-white/35 leading-relaxed">{d}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      <section className="py-28 px-6 max-w-6xl mx-auto">
+      {/* CTA */}
+      <section className="py-24 px-6 max-w-5xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.97 }}
+          whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="border border-[#1c1c1c] p-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-8"
+          className="relative rounded-3xl border border-white/8 bg-white/[0.025] backdrop-blur-sm p-14 text-center overflow-hidden"
         >
-          <div>
-            <span className="font-mono text-[10px] tracking-widest text-[#e8002a] uppercase mb-3 block">/ ready?</span>
-            <h2 className="font-display text-4xl font-bold text-white">browse the vault.</h2>
+          {/* subtle glow behind */}
+          <div className="absolute inset-0 -z-10 flex items-center justify-center">
+            <div className="w-64 h-64 rounded-full bg-violet-600/10 blur-3xl" />
           </div>
+          <h2 className="font-display text-[clamp(28px,4vw,42px)] font-bold text-white mb-4">
+            Ready? <span className="text-white/25">Browse the vault.</span>
+          </h2>
+          <p className="font-display text-[15px] text-white/35 mb-8">
+            All scripts are live and tested right now.
+          </p>
           <button
             onClick={() => setPage("scripts")}
-            className="flex-shrink-0 bg-[#e8002a] hover:bg-[#c0001f] text-white font-mono text-[12px] tracking-widest uppercase px-8 py-4 transition-colors"
+            className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-display font-bold text-[13px] tracking-wider px-9 py-4 rounded-xl transition-all hover:shadow-xl hover:shadow-violet-900/40 group"
           >
-            Open Scripts →
+            Open Scripts <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
           </button>
         </motion.div>
       </section>
@@ -449,105 +531,124 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
   )
 }
 
+// ── Scripts ────────────────────────────────────────────────────────────────────
 function ScriptsPage() {
-  const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("All")
-  const [modal, setModal] = useState<typeof SCRIPTS[0] | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [search, setSearch]   = useState("")
+  const [cat, setCat]         = useState("All")
+  const [modal, setModal]     = useState<typeof SCRIPTS[0] | null>(null)
+  const [copied, setCopied]   = useState(false)
+
+  const catIcons: Record<string, JSX.Element> = {
+    Combat:  <Sword size={11} />,
+    Farming: <Wheat size={11} />,
+    Utility: <Wrench size={11} />,
+  }
 
   const filtered = SCRIPTS.filter(s => {
-    const matchCat = category === "All" || s.category === category
-    const matchSearch =
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.game.toLowerCase().includes(search.toLowerCase())
-    return matchCat && matchSearch
+    const okCat    = cat === "All" || s.category === cat
+    const okSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
+                     s.game.toLowerCase().includes(search.toLowerCase())
+    return okCat && okSearch
   })
 
-  const handleCopy = (code: string) => {
+  const copy = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {})
     setCopied(true)
-    setTimeout(() => setCopied(false), 2200)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-6xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-        <span className="font-mono text-[10px] tracking-widest text-[#e8002a] uppercase mb-3 block">/ script vault</span>
-        <h1 className="font-display text-5xl font-bold text-white mb-2">Scripts</h1>
-        <p className="font-mono text-[12px] text-[#444]">{SCRIPTS.length} scripts — all tested, all undetected.</p>
+    <div className="min-h-screen pt-28 pb-20 px-6 max-w-6xl mx-auto">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <span className="font-display text-[11px] tracking-widest text-violet-400 uppercase border border-violet-500/20 px-3 py-1 rounded-full">
+          Script Vault
+        </span>
+        <h1 className="font-display text-5xl font-bold text-white mt-5 mb-2">Scripts</h1>
+        <p className="font-display text-[14px] text-white/30">{SCRIPTS.length} scripts — tested, undetected.</p>
       </motion.div>
 
+      {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-8">
-        <div className="relative flex-1 min-w-[240px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#333]" />
+        <div className="relative flex-1 min-w-[260px]">
+          <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
           <input
-            className="w-full bg-[#0a0a0a] border border-[#1c1c1c] py-2.5 pl-9 pr-4 text-[#aaa] placeholder-[#333] focus:border-[#e8002a] focus:outline-none font-mono text-[12px] transition-colors"
-            placeholder="search scripts or games..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            placeholder="Search scripts or games..."
+            className="w-full bg-white/[0.04] border border-white/8 rounded-xl py-3 pl-11 pr-4 text-white/80 placeholder-white/20 focus:border-violet-500/40 focus:outline-none font-display text-[13px] transition-colors"
           />
         </div>
-        <div className="flex gap-1.5">
-          {CATEGORIES.map(cat => (
+        <div className="flex gap-2">
+          {CATEGORIES.map(c => (
             <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={`font-mono text-[10px] tracking-widest uppercase px-4 py-2.5 border transition-colors ${
-                category === cat
-                  ? "bg-[#e8002a] border-[#e8002a] text-white"
-                  : "border-[#1c1c1c] text-[#555] hover:border-[#333] hover:text-[#aaa]"
+              key={c}
+              onClick={() => setCat(c)}
+              className={`font-display font-bold text-[12px] tracking-wider px-4 py-2 rounded-xl border transition-all ${
+                cat === c
+                  ? "bg-violet-600 border-violet-500 text-white"
+                  : "border-white/8 text-white/35 hover:border-white/15 hover:text-white/60"
               }`}
             >
-              {cat}
+              {c}
             </button>
           ))}
         </div>
       </div>
 
-      <motion.div layout className="flex flex-col gap-px bg-[#1c1c1c] border border-[#1c1c1c]">
+      {/* Grid */}
+      <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {filtered.map((s, i) => (
             <motion.div
               key={s.id}
               layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="flex items-stretch bg-[#060606] hover:bg-[#0b0b0b] transition-colors group"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-white/[0.03] border border-white/8 rounded-2xl overflow-hidden hover:border-violet-500/25 hover:bg-white/[0.05] transition-all group"
             >
-              <div className="w-[90px] flex-shrink-0 overflow-hidden">
-                <GameThumbnail game={s.game} className="w-full h-full min-h-[72px]" />
+              {/* Thumbnail slot */}
+              <div className="relative h-32 overflow-hidden bg-[#0d0d14]">
+                <GameThumbnail
+                  game={s.game}
+                  className="absolute inset-0 w-full h-full opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
+                />
+                {/* overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d14] via-[#0d0d14]/30 to-transparent" />
+                {/* game label */}
+                <span className="absolute bottom-2.5 left-3.5 font-display font-bold text-[11px] tracking-wider text-white/80 uppercase drop-shadow-md">
+                  {s.game}
+                </span>
+                {/* tag badge */}
+                <span
+                  className="absolute top-2.5 right-2.5 font-display font-bold text-[10px] tracking-widest px-2 py-0.5 rounded-md border backdrop-blur-sm"
+                  style={{
+                    color: s.tagColor,
+                    borderColor: s.tagColor + "35",
+                    backgroundColor: s.tagColor + "15",
+                  }}
+                >
+                  {s.tag}
+                </span>
               </div>
 
-              <div className="flex flex-1 items-center px-5 py-4 gap-4 min-w-0">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-display text-[15px] font-bold text-white group-hover:text-[#e8002a] transition-colors truncate">
-                      {s.name}
-                    </span>
-                    <span
-                      className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 flex-shrink-0 border"
-                      style={{ color: TAG_COLORS[s.tag], borderColor: TAG_COLORS[s.tag] + "40" }}
-                    >
-                      {s.tag}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-[#444]">{s.game}</span>
-                    <span className="text-[#222]">·</span>
-                    <span className="font-mono text-[10px] text-[#333] uppercase tracking-widest">{s.category}</span>
-                    <span className="text-[#222]">·</span>
-                    <span className="font-mono text-[10px] text-[#333] flex items-center gap-1">
-                      <Clock size={9} /> {s.updated}
-                    </span>
-                  </div>
+              {/* Card body */}
+              <div className="p-4">
+                <h3 className="font-display font-bold text-[15px] text-white mb-2 leading-snug">{s.name}</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1 font-display text-[11px] text-white/30 uppercase tracking-wider">
+                    {catIcons[s.category]} {s.category}
+                  </span>
+                  <span className="flex items-center gap-1 font-display text-[11px] text-white/25">
+                    <Clock size={10} /> {s.updated}
+                  </span>
                 </div>
                 <button
                   onClick={() => { setModal(s); setCopied(false) }}
-                  className="flex-shrink-0 border border-[#1c1c1c] group-hover:border-[#e8002a] text-[#555] group-hover:text-[#e8002a] font-mono text-[10px] tracking-widest uppercase px-4 py-2 transition-colors"
+                  className="w-full bg-white/5 hover:bg-violet-600 border border-white/8 hover:border-violet-500 text-white/60 hover:text-white font-display font-bold text-[12px] tracking-wider py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  Get
+                  <Code2 size={13} /> Get Script
                 </button>
               </div>
             </motion.div>
@@ -556,56 +657,62 @@ function ScriptsPage() {
       </motion.div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-20">
-          <p className="font-mono text-[13px] text-[#333]">no scripts match that.</p>
+        <div className="text-center py-24">
+          <Code2 size={36} className="mx-auto mb-4 text-white/15" />
+          <p className="font-display text-[15px] text-white/25">No scripts match that.</p>
         </div>
       )}
 
+      {/* Modal */}
       <AnimatePresence>
         {modal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-md flex items-center justify-center p-6"
             onClick={() => setModal(null)}
           >
             <motion.div
-              initial={{ scale: 0.96, opacity: 0, y: 16 }}
+              initial={{ scale: 0.94, opacity: 0, y: 16 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.96, opacity: 0 }}
-              className="bg-[#080808] border border-[#1c1c1c] w-full max-w-lg"
+              exit={{ scale: 0.94, opacity: 0 }}
+              className="bg-[#0e0e18] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[#1c1c1c]">
+              <div className="flex items-start justify-between p-6 border-b border-white/8">
                 <div>
-                  <div className="font-mono text-[10px] tracking-widest text-[#444] uppercase mb-0.5">{modal.game}</div>
-                  <div className="font-display text-lg font-bold text-white">{modal.name}</div>
+                  <span className="font-display text-[11px] tracking-widest text-white/25 uppercase border border-white/8 px-2 py-0.5 rounded-md">
+                    {modal.game}
+                  </span>
+                  <h2 className="font-display text-[20px] font-bold text-white mt-2">{modal.name}</h2>
                 </div>
-                <button onClick={() => setModal(null)} className="text-[#333] hover:text-white transition-colors">
-                  <X size={16} />
+                <button onClick={() => setModal(null)} className="text-white/25 hover:text-white transition-colors mt-1">
+                  <X size={18} />
                 </button>
               </div>
 
               <div className="p-6">
-                <div className="bg-[#040404] border border-[#181818] p-4 mb-4 max-h-48 overflow-y-auto">
-                  <pre className="font-mono text-[11px] text-[#666] whitespace-pre-wrap leading-relaxed">{modal.code}</pre>
+                <div className="bg-black/40 border border-white/6 rounded-xl p-4 mb-4 max-h-48 overflow-y-auto">
+                  <pre className="font-mono text-[12px] text-white/40 whitespace-pre-wrap leading-relaxed">{modal.code}</pre>
                 </div>
 
-                <div className="flex items-start gap-2 border border-[#1a1208] bg-[#0a0800] p-3 mb-4">
-                  <span className="text-[#d97706] text-xs mt-px">⚠</span>
-                  <span className="font-mono text-[11px] text-[#7a6020] leading-relaxed">
-                    use a trusted executor. xzx hub isn't responsible for misuse.
+                <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-3 mb-4 flex gap-2.5">
+                  <span className="text-amber-400 text-sm mt-px">⚠</span>
+                  <span className="font-display text-[12px] text-amber-400/60 leading-relaxed">
+                    Use a trusted executor. XZX HUB isn't responsible for misuse.
                   </span>
                 </div>
 
                 <button
-                  onClick={() => handleCopy(modal.code)}
-                  className={`w-full font-mono text-[12px] tracking-widest uppercase py-3 flex items-center justify-center gap-2 transition-colors ${
-                    copied ? "bg-[#16a34a] text-white" : "bg-[#e8002a] hover:bg-[#c0001f] text-white"
+                  onClick={() => copy(modal.code)}
+                  className={`w-full font-display font-bold text-[13px] tracking-wider py-3 rounded-xl transition-all flex items-center justify-center gap-2 ${
+                    copied
+                      ? "bg-emerald-600 text-white"
+                      : "bg-violet-600 hover:bg-violet-500 text-white"
                   }`}
                 >
-                  {copied ? <><Check size={14} /> copied</> : <><Copy size={14} /> copy to clipboard</>}
+                  {copied ? <><Check size={15} /> Copied!</> : <><Copy size={15} /> Copy Script</>}
                 </button>
               </div>
             </motion.div>
@@ -616,74 +723,98 @@ function ScriptsPage() {
   )
 }
 
+// ── Updates ────────────────────────────────────────────────────────────────────
 function UpdatesPage() {
-  const LABEL_COLORS: Record<string, string> = {
-    MAJOR: "#e8002a",
-    UPDATE: "#6366f1",
-    PATCH: "#16a34a",
-  }
-
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6 max-w-6xl mx-auto">
+    <div className="min-h-screen pt-28 pb-20 px-6 max-w-6xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-16">
-        <span className="font-mono text-[10px] tracking-widest text-[#e8002a] uppercase mb-3 block">/ changelog</span>
-        <h1 className="font-display text-5xl font-bold text-white mb-2">Updates</h1>
-        <p className="font-mono text-[12px] text-[#444]">every patch, feature, and fix — in order.</p>
+        <span className="font-display text-[11px] tracking-widest text-violet-400 uppercase border border-violet-500/20 px-3 py-1 rounded-full">
+          Changelog
+        </span>
+        <h1 className="font-display text-5xl font-bold text-white mt-5 mb-2">Updates</h1>
+        <p className="font-display text-[14px] text-white/30">Every patch, feature, and fix — in order.</p>
       </motion.div>
 
-      <div className="relative">
-        <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[#1c1c1c]" />
-        <div className="space-y-10">
-          {CHANGELOG.map((entry, i) => (
-            <motion.div
-              key={entry.version}
-              initial={{ opacity: 0, x: -12 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="relative pl-10"
-            >
-              <div
-                className="absolute left-0 top-[6px] w-[15px] h-[15px] border-2 border-[#060606]"
-                style={{ backgroundColor: LABEL_COLORS[entry.label] ?? "#e8002a" }}
-              />
-
-              <div className="border border-[#1c1c1c] hover:border-[#2a2a2a] transition-colors">
-                <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-[#111]">
-                  <span className="font-display text-base font-bold text-white">{entry.version}</span>
-                  <span
-                    className="font-mono text-[9px] tracking-widest px-2 py-0.5 uppercase border"
-                    style={{ color: LABEL_COLORS[entry.label], borderColor: LABEL_COLORS[entry.label] + "40" }}
-                  >
-                    {entry.label}
-                  </span>
-                  <span className="font-mono text-[10px] text-[#333] ml-auto flex items-center gap-1">
-                    <Clock size={9} /> {entry.date}
-                  </span>
+      <div className="grid lg:grid-cols-[1fr_300px] gap-10">
+        {/* Timeline */}
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-violet-500/30 via-white/10 to-transparent" />
+          <div className="space-y-10">
+            {CHANGELOG.map((e, i) => (
+              <motion.div
+                key={e.version}
+                initial={{ opacity: 0, x: -16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.09 }}
+                className="relative pl-9"
+              >
+                <div
+                  className="absolute left-[-5px] top-2 w-2.5 h-2.5 rounded-full border-2 border-[#07070f]"
+                  style={{ backgroundColor: e.labelColor, boxShadow: `0 0 10px ${e.labelColor}60` }}
+                />
+                <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6 hover:border-white/12 transition-all">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span className="font-display text-[17px] font-bold text-white">{e.version}</span>
+                    <span
+                      className="font-display text-[10px] font-bold tracking-widest px-2 py-0.5 rounded-md border"
+                      style={{ color: e.labelColor, borderColor: e.labelColor + "30", backgroundColor: e.labelColor + "10" }}
+                    >
+                      {e.label}
+                    </span>
+                    <span className="font-display text-[11px] text-white/25 ml-auto flex items-center gap-1">
+                      <Clock size={10} /> {e.date}
+                    </span>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {e.changes.map((c, idx) => (
+                      <li key={idx} className="font-display text-[13px] text-white/35 flex items-start gap-2">
+                        <span className="text-violet-500/60 mt-1 text-[8px]">●</span> {c}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="px-6 py-4 space-y-2">
-                  {entry.changes.map((c, idx) => (
-                    <li key={idx} className="font-mono text-[12px] text-[#555] flex items-start gap-2">
-                      <span className="text-[#e8002a] mt-px text-[9px]">—</span>
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
+
+        {/* Sidebar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="lg:sticky lg:top-28 h-fit"
+        >
+          <div className="bg-white/[0.03] border border-white/8 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 bg-violet-500/10 rounded-xl flex items-center justify-center">
+                <RefreshCw size={16} className="text-violet-400" />
+              </div>
+              <h3 className="font-display font-bold text-[15px] text-white">Auto-Update On</h3>
+            </div>
+            <p className="font-display text-[13px] text-white/30 mb-5 leading-relaxed">
+              Scripts update automatically within hours of a Roblox patch. You don't have to do anything.
+            </p>
+            <div className="h-px bg-white/6 my-4" />
+            <div className="flex items-center justify-between">
+              <span className="font-display text-[10px] tracking-widest text-white/20 uppercase">Last Check</span>
+              <span className="font-display text-[13px] text-white font-bold">Just now</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )
 }
 
+// ── Root ───────────────────────────────────────────────────────────────────────
 export default function Page() {
   const [page, setPage] = useState("home")
   return (
     <>
       <Navbar page={page} setPage={setPage} />
-      {page === "home" && <HomePage setPage={setPage} />}
+      {page === "home"    && <HomePage setPage={setPage} />}
       {page === "scripts" && <ScriptsPage />}
       {page === "updates" && <UpdatesPage />}
     </>
