@@ -5,35 +5,16 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #060606;
-  color: #f0ede8;
-  font-family: 'Chakra Petch', sans-serif;
+  background: #07070f;
+  color: #e8e6f0;
+  font-family: 'Syne', sans-serif;
   overflow-x: hidden;
 }
 
+.font-display { font-family: 'Syne', sans-serif; }
+
 ::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: #060606; }
-::-webkit-scrollbar-thumb { background: #e8002a; }
+::-webkit-scrollbar-track { background: #07070f; }
+::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 2px; }
 
-.font-display { font-family: 'Chakra Petch', sans-serif; }
-.font-mono    { font-family: 'Space Mono', monospace; }
-
-.scanlines::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 0, 0, 0.04) 3px,
-    rgba(0, 0, 0, 0.04) 4px
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-::selection {
-  background: #e8002a;
-  color: #fff;
-}
+::selection { background: #7c3aed; color: #fff; }
