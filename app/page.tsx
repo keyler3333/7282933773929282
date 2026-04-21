@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { 
   Zap, RefreshCw, Shield, Search, Copy, Check, X,
   ExternalLink, ChevronRight, Menu, XIcon, Clock,
-  ArrowRight, Star, Code2, Sword, Wheat, Wrench,
-  Github, Twitter, Disc
+  ArrowRight, Star, Code2, Sword, Wheat, Wrench
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import * as THREE from 'three'
@@ -91,13 +90,11 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// --- 3D Particle Field Component ---
 function ParticleField() {
-  const { viewport } = useThree()
   const count = 1500
-  const pointsRef = useRef()
+  const pointsRef = useRef<THREE.Points>(null)
   const mouseRef = useRef({ x: 0, y: 0 })
-  const clock = new THREE.Clock()
+  const clock = useRef(new THREE.Clock())
 
   const particles = useRef({
     positions: new Float32Array(count * 3),
@@ -105,7 +102,7 @@ function ParticleField() {
   })
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
       mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1
     }
@@ -131,13 +128,15 @@ function ParticleField() {
       colors[i*3+1] = shade
       colors[i*3+2] = shade
     }
-  }, [count])
+  }, [])
 
   useFrame(() => {
     if (!pointsRef.current) return
     
-    const time = clock.getElapsedTime()
-    const positions = pointsRef.current.geometry.attributes.position.array
+    const time = clock.current.getElapsedTime()
+    const geometry = pointsRef.current.geometry
+    const positionAttribute = geometry.attributes.position
+    const positions = positionAttribute.array as Float32Array
     const mouse = mouseRef.current
     
     for (let i = 0; i < count; i++) {
@@ -162,7 +161,7 @@ function ParticleField() {
       }
     }
     
-    pointsRef.current.geometry.attributes.position.needsUpdate = true
+    positionAttribute.needsUpdate = true
     pointsRef.current.rotation.y += 0.0005
   })
 
@@ -194,8 +193,7 @@ function ParticleField() {
   )
 }
 
-// --- Navbar Component ---
-function Navbar({ page, setPage }) {
+function Navbar({ page, setPage }: { page: string, setPage: (p: string) => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -242,7 +240,10 @@ function Navbar({ page, setPage }) {
             ))}
           </div>
 
-          <button className="hidden md:block bg-white text-black font-display font-bold text-xs tracking-wider px-5 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+          <button 
+            onClick={() => setPage("scripts")}
+            className="hidden md:block bg-white text-black font-display font-bold text-xs tracking-wider px-5 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+          >
             Get Scripts
           </button>
 
@@ -283,8 +284,7 @@ function Navbar({ page, setPage }) {
   )
 }
 
-// --- HomePage Component ---
-function HomePage({ setPage }) {
+function HomePage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div className="min-h-screen">
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -346,7 +346,7 @@ function HomePage({ setPage }) {
               View Scripts <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button className="bg-transparent text-white border border-white/20 font-display font-bold text-sm tracking-wider px-8 py-3 rounded-lg hover:bg-white/5 transition-all flex items-center gap-2">
-              <Disc size={16} /> Join Discord
+              <ExternalLink size={16} /> Join Discord
             </button>
           </motion.div>
 
@@ -384,7 +384,7 @@ function HomePage({ setPage }) {
               XZX HUB is a team of dedicated developers obsessed with crafting the cleanest, fastest, and most reliable Roblox scripts available anywhere.
             </p>
             <p className="text-gray-400 text-base">
-              Every script is hand-coded, tested across servers, and updated within hours of game patches. We don't cut corners.
+              Every script is hand-coded, tested across servers, and updated within hours of game patches. We don&apos;t cut corners.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -474,11 +474,10 @@ function HomePage({ setPage }) {
   )
 }
 
-// --- ScriptsPage Component ---
 function ScriptsPage() {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("All")
-  const [modal, setModal] = useState(null)
+  const [modal, setModal] = useState<typeof SCRIPTS[0] | null>(null)
   const [copied, setCopied] = useState(false)
 
   const filtered = SCRIPTS.filter(s => {
@@ -487,13 +486,13 @@ function ScriptsPage() {
     return matchCat && matchSearch
   })
 
-  const handleCopy = (code) => {
+  const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const catIcons = { Combat: <Sword size={12} />, Farming: <Wheat size={12} />, Utility: <Wrench size={12} /> }
+  const catIcons: Record<string, JSX.Element> = { Combat: <Sword size={12} />, Farming: <Wheat size={12} />, Utility: <Wrench size={12} /> }
 
   return (
     <div className="min-h-screen pt-28 pb-16 px-6 max-w-7xl mx-auto">
@@ -633,7 +632,6 @@ function ScriptsPage() {
   )
 }
 
-// --- UpdatesPage Component ---
 function UpdatesPage() {
   return (
     <div className="min-h-screen pt-28 pb-16 px-6 max-w-7xl mx-auto">
@@ -712,7 +710,6 @@ function UpdatesPage() {
   )
 }
 
-// --- Main Page Export ---
 export default function Page() {
   const [page, setPage] = useState("home")
 
