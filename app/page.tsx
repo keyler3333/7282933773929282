@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { EffectComposer, GodRays } from '@react-three/postprocessing'
+import { BlendFunction, KernelSize } from 'postprocessing'
 import {
   Zap, RefreshCw, Shield, Search, Copy, Check, X,
   ExternalLink, Menu, XIcon, Clock, ArrowRight, Code2,
@@ -89,35 +91,51 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// --- New: Light Ray Overlay (CSS gradient that follows mouse) ---
-function LightRayOverlay() {
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100
-      const y = (e.clientY / window.innerHeight) * 100
-      document.documentElement.style.setProperty('--mouse-x', `${x}%`)
-      document.documentElement.style.setProperty('--mouse-y', `${y}%`)
+// --- Dynamic Sun with God Rays (Purple) ---
+function SunAndRays() {
+  const sunRef = useRef<THREE.Mesh>(null)
+  const { scene } = useThree()
+  const time = useRef(0)
+
+  useFrame((state, delta) => {
+    time.current += delta * 0.1 // slow drift
+    if (sunRef.current) {
+      // Sun moves in a figure-8 pattern across the sky
+      const x = Math.sin(time.current * 0.3) * 5
+      const y = 2 + Math.sin(time.current * 0.5) * 1.5
+      const z = -2 + Math.cos(time.current * 0.2) * 3
+      sunRef.current.position.set(x, y, z)
     }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
+  })
 
   return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-20"
-      style={{
-        background: `radial-gradient(circle 400px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(168, 85, 247, 0.08), transparent 60%)`,
-        mixBlendMode: 'overlay',
-      }}
-    />
+    <>
+      <mesh ref={sunRef}>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshBasicMaterial color="#c084fc" />
+      </mesh>
+      <EffectComposer>
+        <GodRays
+          sun={sunRef}
+          blendFunction={BlendFunction.SCREEN}
+          samples={60}
+          density={0.97}
+          decay={0.95}
+          weight={1.2}
+          exposure={0.6}
+          clampMax={1}
+          kernelSize={KernelSize.MEDIUM}
+          blur={true}
+        />
+      </EffectComposer>
+    </>
   )
 }
 
-// --- Enhanced ParticleField with moving light ---
+// --- Particle Field with Purple Tint ---
 function ParticleField() {
   const count = 1200
   const pointsRef = useRef<THREE.Points>(null)
-  const lightRef = useRef<THREE.PointLight>(null)
   const mouse = useRef({ x: 0, y: 0 })
   const clock = useRef(new THREE.Clock())
   const buf = useRef({ pos: new Float32Array(count * 3), col: new Float32Array(count * 3) })
@@ -141,20 +159,15 @@ function ParticleField() {
       pos[i*3+1] = Math.sin(p)*Math.sin(t)*r
       pos[i*3+2] = Math.cos(p)*r
       const b = 0.4 + Math.random() * 0.4
-      col[i*3] = b; col[i*3+1] = b; col[i*3+2] = b
+      // Slight purple tint
+      col[i*3] = b * 0.9
+      col[i*3+1] = b * 0.7
+      col[i*3+2] = b
     }
   }, [])
 
   useFrame(() => {
     if (!pointsRef.current) return
-    
-    // Update light position to follow mouse in 3D space
-    if (lightRef.current) {
-      lightRef.current.position.x = mouse.current.x * 4
-      lightRef.current.position.y = mouse.current.y * 3
-      lightRef.current.position.z = 2
-    }
-
     const t = clock.current.getElapsedTime()
     const pa = pointsRef.current.geometry.attributes.position
     const pos = pa.array as Float32Array
@@ -172,28 +185,51 @@ function ParticleField() {
   })
 
   return (
-    <>
-      <pointLight ref={lightRef} color="#a855f7" intensity={0.8} distance={8} />
-      <ambientLight intensity={0.3} />
-      <points ref={pointsRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
-          <bufferAttribute attach="attributes-color" count={count} array={buf.current.col} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial 
-          size={0.022} 
-          vertexColors 
-          transparent 
-          blending={THREE.AdditiveBlending} 
-          depthWrite={false} 
-          opacity={0.7} 
-        />
-      </points>
-    </>
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={count} array={buf.current.col} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial 
+        size={0.022} 
+        vertexColors 
+        transparent 
+        blending={THREE.AdditiveBlending} 
+        depthWrite={false} 
+        opacity={0.7} 
+      />
+    </points>
   )
 }
 
-// --- GameThumbnail component (unchanged) ---
+// --- Global Ambient Light Overlay (CSS sun ray simulation) ---
+function AmbientLightOverlay() {
+  useEffect(() => {
+    let angle = 0
+    const interval = setInterval(() => {
+      angle = (angle + 0.5) % 360
+      const rad = angle * (Math.PI / 180)
+      const x = 50 + Math.cos(rad) * 40
+      const y = 50 + Math.sin(rad * 0.7) * 30
+      document.documentElement.style.setProperty('--light-x', `${x}%`)
+      document.documentElement.style.setProperty('--light-y', `${y}%`)
+    }, 50)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none z-20"
+      style={{
+        background: `radial-gradient(circle 600px at var(--light-x, 50%) var(--light-y, 50%), rgba(168, 85, 247, 0.12), transparent 60%)`,
+        mixBlendMode: 'overlay',
+        transition: 'background 0.3s ease',
+      }}
+    />
+  )
+}
+
+// --- GameThumbnail ---
 function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
   const [imgErr, setImgErr] = useState(false)
   const thumbnailUrl = GAME_THUMBNAILS[game]
@@ -218,7 +254,7 @@ function GameThumbnail({ game, className = "" }: { game: string; className?: str
   )
 }
 
-// --- Navbar (with light-reactive logo) ---
+// --- Navbar ---
 function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -236,10 +272,10 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
       <div className={`mx-auto max-w-6xl mt-3 rounded-xl transition-all duration-300 backdrop-blur-md ${scrolled ? "bg-black/80 border border-white/10" : "bg-black/40 border border-white/5"}`}>
         <div className="flex items-center justify-between px-5 py-3">
           <button onClick={() => setPage("home")} className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-all duration-300 group-hover:border-violet-400/50 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-all duration-300 group-hover:border-purple-400/50 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]">
               <img src={LOGO_URL} alt="XZX" className="w-full h-full object-cover" />
             </div>
-            <span className="font-display text-lg font-bold text-white tracking-tight transition-all duration-300 group-hover:text-violet-200 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+            <span className="font-display text-lg font-bold text-white tracking-tight transition-all duration-300 group-hover:text-purple-200 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
               XZX <span className="text-white/30 group-hover:text-white/50">HUB</span>
             </span>
           </button>
@@ -277,14 +313,17 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
   )
 }
 
-// --- HomePage (with light-reactive text) ---
+// --- HomePage ---
 function HomePage({ setPage }: { setPage: (p: string) => void }) {
   return (
     <div className="min-h-screen">
       <section className="relative min-h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
-            <Suspense fallback={null}><ParticleField /></Suspense>
+            <Suspense fallback={null}>
+              <SunAndRays />
+              <ParticleField />
+            </Suspense>
           </Canvas>
         </div>
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/80 via-black/40 to-black" />
@@ -293,7 +332,7 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
           <div className="max-w-3xl">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 transition-all duration-500 hover:border-violet-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 transition-all duration-500 hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]">
                   <img src={LOGO_URL} alt="XZX" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-white/40 text-sm font-medium tracking-wide">scripts that don't break every update</span>
@@ -304,7 +343,7 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
               initial={{ opacity: 0, y: 24 }} 
               animate={{ opacity: 1, y: 0 }} 
               transition={{ duration: 0.6, delay: 0.1 }} 
-              className="font-display text-[clamp(48px,8vw,96px)] font-bold leading-none tracking-tight text-white mb-4 transition-all duration-500 hover:text-violet-100 hover:drop-shadow-[0_0_30px_rgba(168,85,247,0.3)]"
+              className="font-display text-[clamp(48px,8vw,96px)] font-bold leading-none tracking-tight text-white mb-4 transition-all duration-500 hover:text-purple-100 hover:drop-shadow-[0_0_30px_rgba(168,85,247,0.3)]"
             >
               XZX HUB
             </motion.h1>
@@ -346,7 +385,7 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
               { title: "Fast updates", desc: "If a game patches, we usually have a fix within a day." },
               { title: "No bloat", desc: "Scripts do what they say. No extra garbage." }
             ].map((item, i) => (
-              <div key={i} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-violet-400/30 transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <div key={i} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-purple-400/30 transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]">
                 <h3 className="font-bold text-white text-lg mb-1">{item.title}</h3>
                 <p className="text-white/40">{item.desc}</p>
               </div>
@@ -402,7 +441,7 @@ function ScriptsPage() {
       <div className="flex flex-wrap gap-3 mb-8">
         <div className="relative flex-1 min-w-[260px]">
           <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-violet-400/50 focus:outline-none transition-colors" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-purple-400/50 focus:outline-none transition-colors" />
         </div>
         <div className="flex gap-2">
           {CATEGORIES.map(c => (
@@ -414,7 +453,7 @@ function ScriptsPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {filtered.map((s, i) => (
-            <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-violet-400/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all">
+            <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-purple-400/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all">
               <div className="relative h-32 bg-black/60">
                 <GameThumbnail game={s.game} className="absolute inset-0 w-full h-full opacity-70 hover:opacity-100 transition" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
@@ -480,7 +519,7 @@ function UpdatesPage() {
 
       <div className="space-y-8">
         {CHANGELOG.map((entry, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-violet-400/30 transition-all">
+          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-purple-400/30 transition-all">
             <div className="flex items-baseline gap-3 mb-3">
               <span className="text-lg font-bold text-white">{entry.version}</span>
               <span className="text-sm text-white/30">{entry.date}</span>
@@ -500,12 +539,12 @@ function UpdatesPage() {
   )
 }
 
-// --- Main Page with Light Overlay ---
+// --- Main Page with Ambient Light Overlay ---
 export default function Page() {
   const [page, setPage] = useState("home")
   return (
     <>
-      <LightRayOverlay />
+      <AmbientLightOverlay />
       <Navbar page={page} setPage={setPage} />
       {page === "home" && <HomePage setPage={setPage} />}
       {page === "scripts" && <ScriptsPage />}
