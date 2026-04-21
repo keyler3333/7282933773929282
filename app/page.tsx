@@ -89,66 +89,101 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// --- 3D Particle Field (kept simple) ---
+// --- Fixed ParticleField (never stops, smoother animation) ---
 function ParticleField() {
   const count = 1200
   const pointsRef = useRef<THREE.Points>(null)
-  const mouse = useRef({ x: 0, y: 0 })
-  const clock = useRef(new THREE.Clock())
-  const buf = useRef({ pos: new Float32Array(count * 3), col: new Float32Array(count * 3) })
+  const mouseRef = useRef({ x: 0, y: 0 })
+  const clockRef = useRef(new THREE.Clock())
+  const positionsRef = useRef<Float32Array | null>(null)
+  const colorsRef = useRef<Float32Array | null>(null)
 
   useEffect(() => {
-    const mv = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+    const pos = new Float32Array(count * 3)
+    const col = new Float32Array(count * 3)
+
+    for (let i = 0; i < count; i++) {
+      const r = 3 + Math.random() * 5
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+
+      pos[i*3] = Math.sin(phi) * Math.cos(theta) * r
+      pos[i*3+1] = Math.sin(phi) * Math.sin(theta) * r
+      pos[i*3+2] = Math.cos(phi) * r
+
+      const brightness = 0.4 + Math.random() * 0.6
+      col[i*3] = brightness * 0.95
+      col[i*3+1] = brightness * 0.85
+      col[i*3+2] = brightness
     }
-    window.addEventListener("mousemove", mv)
-    return () => window.removeEventListener("mousemove", mv)
+
+    positionsRef.current = pos
+    colorsRef.current = col
   }, [])
 
   useEffect(() => {
-    const { pos, col } = buf.current
-    for (let i = 0; i < count; i++) {
-      const r = 3 + Math.random() * 5
-      const t = Math.random() * Math.PI * 2
-      const p = Math.acos(2 * Math.random() - 1)
-      pos[i*3] = Math.sin(p) * Math.cos(t) * r
-      pos[i*3+1] = Math.sin(p) * Math.sin(t) * r
-      pos[i*3+2] = Math.cos(p) * r
-      const b = 0.4 + Math.random() * 0.4
-      col[i*3] = b * 0.9
-      col[i*3+1] = b * 0.7
-      col[i*3+2] = b
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1
     }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
   useFrame(() => {
     if (!pointsRef.current) return
-    const t = clock.current.getElapsedTime()
-    const pa = pointsRef.current.geometry.attributes.position
-    const pos = pa.array as Float32Array
-    const m = mouse.current
+    if (!positionsRef.current) return
+
+    const time = clockRef.current.getElapsedTime()
+    const geometry = pointsRef.current.geometry
+    const posAttr = geometry.attributes.position
+    const positions = posAttr.array as Float32Array
+    const originalPos = positionsRef.current
+    const mouse = mouseRef.current
+
     for (let i = 0; i < count; i++) {
-      const i3 = i*3
-      const x = pos[i3], y = pos[i3+1], z = pos[i3+2]
-      pos[i3]   += (x + m.x*1.5) * 0.001
-      pos[i3+1] += (y + m.y*1.5) * 0.001
-      pos[i3+2] += (z + Math.sin(t*0.2+x)*0.1 - z) * 0.001
-      if (Math.sqrt(x*x + y*y + z*z) > 8) {
-        pos[i3]   *= 0.99
-        pos[i3+1] *= 0.99
-        pos[i3+2] *= 0.99
+      const i3 = i * 3
+      const ox = originalPos[i3]
+      const oy = originalPos[i3+1]
+      const oz = originalPos[i3+2]
+
+      const targetX = ox + mouse.x * 2.5
+      const targetY = oy + mouse.y * 2.0
+      const targetZ = oz + Math.sin(time * 0.3 + ox) * 0.5
+
+      positions[i3] += (targetX - positions[i3]) * 0.02
+      positions[i3+1] += (targetY - positions[i3+1]) * 0.02
+      positions[i3+2] += (targetZ - positions[i3+2]) * 0.02
+
+      const dist = Math.sqrt(positions[i3]**2 + positions[i3+1]**2 + positions[i3+2]**2)
+      if (dist > 8.5) {
+        positions[i3] *= 0.98
+        positions[i3+1] *= 0.98
+        positions[i3+2] *= 0.98
       }
     }
-    pa.needsUpdate = true
-    pointsRef.current.rotation.y += 0.0003
+
+    posAttr.needsUpdate = true
+    pointsRef.current.rotation.y += 0.0004
   })
+
+  if (!positionsRef.current || !colorsRef.current) return null
 
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={buf.current.col} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positionsRef.current}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={colorsRef.current}
+          itemSize={3}
+        />
       </bufferGeometry>
       <pointsMaterial
         size={0.022}
@@ -156,13 +191,13 @@ function ParticleField() {
         transparent
         blending={THREE.AdditiveBlending}
         depthWrite={false}
-        opacity={0.7}
+        opacity={0.85}
       />
     </points>
   )
 }
 
-// --- Game Thumbnail (unchanged) ---
+// --- GameThumbnail ---
 function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
   const [imgErr, setImgErr] = useState(false)
   const thumbnailUrl = GAME_THUMBNAILS[game]
@@ -187,7 +222,7 @@ function GameThumbnail({ game, className = "" }: { game: string; className?: str
   )
 }
 
-// --- Navbar (with light‑reactive logo) ---
+// --- Navbar ---
 function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -592,12 +627,12 @@ function UpdatesPage() {
   )
 }
 
-// --- Main Page with CSS Light Beams ---
+// --- Main Page with White Light Beams ---
 export default function Page() {
   const [page, setPage] = useState("home")
   return (
     <>
-      {/* CSS Purple Sun Rays */}
+      {/* White light beams – ensure these render above everything */}
       <div className="light-beam" />
       <div className="light-beam-2" />
       <div className="ambient-glow" />
