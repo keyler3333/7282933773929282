@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { EffectComposer, GodRays } from '@react-three/postprocessing'
-import { BlendFunction, KernelSize } from 'postprocessing'
+import { Canvas, useFrame } from "@react-three/fiber"
 import {
   Zap, RefreshCw, Shield, Search, Copy, Check, X,
   ExternalLink, Menu, XIcon, Clock, ArrowRight, Code2,
@@ -91,48 +89,7 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// --- Dynamic Sun with God Rays (Purple) ---
-function SunAndRays() {
-  const sunRef = useRef<THREE.Mesh>(null)
-  const { scene } = useThree()
-  const time = useRef(0)
-
-  useFrame((state, delta) => {
-    time.current += delta * 0.1 // slow drift
-    if (sunRef.current) {
-      // Sun moves in a figure-8 pattern across the sky
-      const x = Math.sin(time.current * 0.3) * 5
-      const y = 2 + Math.sin(time.current * 0.5) * 1.5
-      const z = -2 + Math.cos(time.current * 0.2) * 3
-      sunRef.current.position.set(x, y, z)
-    }
-  })
-
-  return (
-    <>
-      <mesh ref={sunRef}>
-        <sphereGeometry args={[0.4, 32, 32]} />
-        <meshBasicMaterial color="#c084fc" />
-      </mesh>
-      <EffectComposer>
-        <GodRays
-          sun={sunRef}
-          blendFunction={BlendFunction.SCREEN}
-          samples={60}
-          density={0.97}
-          decay={0.95}
-          weight={1.2}
-          exposure={0.6}
-          clampMax={1}
-          kernelSize={KernelSize.MEDIUM}
-          blur={true}
-        />
-      </EffectComposer>
-    </>
-  )
-}
-
-// --- Particle Field with Purple Tint ---
+// --- 3D Particle Field (kept simple) ---
 function ParticleField() {
   const count = 1200
   const pointsRef = useRef<THREE.Points>(null)
@@ -155,11 +112,10 @@ function ParticleField() {
       const r = 3 + Math.random() * 5
       const t = Math.random() * Math.PI * 2
       const p = Math.acos(2 * Math.random() - 1)
-      pos[i*3] = Math.sin(p)*Math.cos(t)*r
-      pos[i*3+1] = Math.sin(p)*Math.sin(t)*r
-      pos[i*3+2] = Math.cos(p)*r
+      pos[i*3] = Math.sin(p) * Math.cos(t) * r
+      pos[i*3+1] = Math.sin(p) * Math.sin(t) * r
+      pos[i*3+2] = Math.cos(p) * r
       const b = 0.4 + Math.random() * 0.4
-      // Slight purple tint
       col[i*3] = b * 0.9
       col[i*3+1] = b * 0.7
       col[i*3+2] = b
@@ -175,10 +131,14 @@ function ParticleField() {
     for (let i = 0; i < count; i++) {
       const i3 = i*3
       const x = pos[i3], y = pos[i3+1], z = pos[i3+2]
-      pos[i3]   += (x + m.x*1.5)*0.001
-      pos[i3+1] += (y + m.y*1.5)*0.001
-      pos[i3+2] += (z + Math.sin(t*0.2+x)*0.1 - z)*0.001
-      if (Math.sqrt(x*x+y*y+z*z) > 8) { pos[i3]*=0.99; pos[i3+1]*=0.99; pos[i3+2]*=0.99 }
+      pos[i3]   += (x + m.x*1.5) * 0.001
+      pos[i3+1] += (y + m.y*1.5) * 0.001
+      pos[i3+2] += (z + Math.sin(t*0.2+x)*0.1 - z) * 0.001
+      if (Math.sqrt(x*x + y*y + z*z) > 8) {
+        pos[i3]   *= 0.99
+        pos[i3+1] *= 0.99
+        pos[i3+2] *= 0.99
+      }
     }
     pa.needsUpdate = true
     pointsRef.current.rotation.y += 0.0003
@@ -190,46 +150,19 @@ function ParticleField() {
         <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
         <bufferAttribute attach="attributes-color" count={count} array={buf.current.col} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial 
-        size={0.022} 
-        vertexColors 
-        transparent 
-        blending={THREE.AdditiveBlending} 
-        depthWrite={false} 
-        opacity={0.7} 
+      <pointsMaterial
+        size={0.022}
+        vertexColors
+        transparent
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        opacity={0.7}
       />
     </points>
   )
 }
 
-// --- Global Ambient Light Overlay (CSS sun ray simulation) ---
-function AmbientLightOverlay() {
-  useEffect(() => {
-    let angle = 0
-    const interval = setInterval(() => {
-      angle = (angle + 0.5) % 360
-      const rad = angle * (Math.PI / 180)
-      const x = 50 + Math.cos(rad) * 40
-      const y = 50 + Math.sin(rad * 0.7) * 30
-      document.documentElement.style.setProperty('--light-x', `${x}%`)
-      document.documentElement.style.setProperty('--light-y', `${y}%`)
-    }, 50)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-20"
-      style={{
-        background: `radial-gradient(circle 600px at var(--light-x, 50%) var(--light-y, 50%), rgba(168, 85, 247, 0.12), transparent 60%)`,
-        mixBlendMode: 'overlay',
-        transition: 'background 0.3s ease',
-      }}
-    />
-  )
-}
-
-// --- GameThumbnail ---
+// --- Game Thumbnail (unchanged) ---
 function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
   const [imgErr, setImgErr] = useState(false)
   const thumbnailUrl = GAME_THUMBNAILS[game]
@@ -254,7 +187,7 @@ function GameThumbnail({ game, className = "" }: { game: string; className?: str
   )
 }
 
-// --- Navbar ---
+// --- Navbar (with light‑reactive logo) ---
 function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -268,8 +201,15 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
   const links: [string, string][] = [["home","Home"],["scripts","Scripts"],["updates","Updates"]]
 
   return (
-    <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.4 }} className="fixed top-0 left-0 right-0 z-50 px-5">
-      <div className={`mx-auto max-w-6xl mt-3 rounded-xl transition-all duration-300 backdrop-blur-md ${scrolled ? "bg-black/80 border border-white/10" : "bg-black/40 border border-white/5"}`}>
+    <motion.nav
+      initial={{ y: -80 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="fixed top-0 left-0 right-0 z-50 px-5"
+    >
+      <div className={`mx-auto max-w-6xl mt-3 rounded-xl transition-all duration-300 backdrop-blur-md ${
+        scrolled ? "bg-black/80 border border-white/10" : "bg-black/40 border border-white/5"
+      }`}>
         <div className="flex items-center justify-between px-5 py-3">
           <button onClick={() => setPage("home")} className="flex items-center gap-3 group">
             <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 transition-all duration-300 group-hover:border-purple-400/50 group-hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]">
@@ -282,13 +222,22 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
 
           <div className="hidden md:flex items-center gap-1">
             {links.map(([p, label]) => (
-              <button key={p} onClick={() => setPage(p)} className={`px-4 py-1.5 text-sm font-medium transition-colors ${page === p ? "text-white" : "text-white/40 hover:text-white/70"}`}>
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`px-4 py-1.5 text-sm font-medium transition-colors ${
+                  page === p ? "text-white" : "text-white/40 hover:text-white/70"
+                }`}
+              >
                 {label}
               </button>
             ))}
           </div>
 
-          <button onClick={() => setPage("scripts")} className="hidden md:block bg-white text-black text-sm font-bold px-5 py-2 rounded-lg hover:bg-white/90 transition">
+          <button
+            onClick={() => setPage("scripts")}
+            className="hidden md:block bg-white text-black text-sm font-bold px-5 py-2 rounded-lg hover:bg-white/90 transition"
+          >
             Get Scripts
           </button>
 
@@ -299,10 +248,23 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
 
         <AnimatePresence>
           {open && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="md:hidden border-t border-white/8">
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-white/8"
+            >
               <div className="flex flex-col p-4 gap-1">
                 {links.map(([p, label]) => (
-                  <button key={p} onClick={() => { setPage(p); setOpen(false) }} className={`text-left px-3 py-2 text-sm ${page === p ? "text-white bg-white/5" : "text-white/40"}`}>{label}</button>
+                  <button
+                    key={p}
+                    onClick={() => { setPage(p); setOpen(false) }}
+                    className={`text-left px-3 py-2 text-sm ${
+                      page === p ? "text-white bg-white/5" : "text-white/40"
+                    }`}
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
             </motion.div>
@@ -321,7 +283,6 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
         <div className="absolute inset-0 z-0">
           <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
             <Suspense fallback={null}>
-              <SunAndRays />
               <ParticleField />
             </Suspense>
           </Canvas>
@@ -330,33 +291,58 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
 
         <div className="relative z-10 w-full max-w-6xl mx-auto px-6 pt-20">
           <div className="max-w-3xl">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-6"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 transition-all duration-500 hover:border-purple-400/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]">
                   <img src={LOGO_URL} alt="XZX" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-white/40 text-sm font-medium tracking-wide">scripts that don't break every update</span>
+                <span className="text-white/40 text-sm font-medium tracking-wide">
+                  scripts that don't break every update
+                </span>
               </div>
             </motion.div>
 
-            <motion.h1 
-              initial={{ opacity: 0, y: 24 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.6, delay: 0.1 }} 
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
               className="font-display text-[clamp(48px,8vw,96px)] font-bold leading-none tracking-tight text-white mb-4 transition-all duration-500 hover:text-purple-100 hover:drop-shadow-[0_0_30px_rgba(168,85,247,0.3)]"
             >
               XZX HUB
             </motion.h1>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-white/50 text-xl max-w-2xl mb-10 leading-relaxed">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-white/50 text-xl max-w-2xl mb-10 leading-relaxed"
+            >
               We update these scripts constantly because Roblox patches constantly. They work on our machines and they'll work on yours.
             </motion.p>
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-wrap gap-4">
-              <button onClick={() => setPage("scripts")} className="bg-white text-black font-bold text-sm px-8 py-4 rounded-lg hover:bg-white/90 transition flex items-center gap-2">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-wrap gap-4"
+            >
+              <button
+                onClick={() => setPage("scripts")}
+                className="bg-white text-black font-bold text-sm px-8 py-4 rounded-lg hover:bg-white/90 transition flex items-center gap-2"
+              >
                 Browse scripts <ArrowRight size={16} />
               </button>
-              <a href="https://discord.gg" target="_blank" rel="noreferrer" className="backdrop-blur-md bg-white/5 border border-white/20 text-white/70 font-medium text-sm px-8 py-4 rounded-lg hover:border-white/40 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
+              <a
+                href="https://discord.gg"
+                target="_blank"
+                rel="noreferrer"
+                className="backdrop-blur-md bg-white/5 border border-white/20 text-white/70 font-medium text-sm px-8 py-4 rounded-lg hover:border-white/40 hover:bg-white/10 hover:text-white transition flex items-center gap-2"
+              >
                 <ExternalLink size={16} /> Discord
               </a>
             </motion.div>
@@ -376,8 +362,12 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
         <div className="grid md:grid-cols-[1.2fr,0.8fr] gap-16">
           <div>
             <h2 className="font-display text-3xl font-bold text-white mb-6">Why we made this</h2>
-            <p className="text-white/50 text-lg leading-relaxed mb-4">We got tired of scripts breaking two days after finding them. So we started fixing them ourselves and keeping them updated. Now we just share what we use.</p>
-            <p className="text-white/50 text-lg leading-relaxed">No corporate nonsense, no "company". Just a team of devs with too much free time and a decent understanding of Roblox's internals.</p>
+            <p className="text-white/50 text-lg leading-relaxed mb-4">
+              We got tired of scripts breaking two days after finding them. So we started fixing them ourselves and keeping them updated. Now we just share what we use.
+            </p>
+            <p className="text-white/50 text-lg leading-relaxed">
+              No corporate nonsense, no "company". Just a team of devs with too much free time and a decent understanding of Roblox's internals.
+            </p>
           </div>
           <div className="space-y-6">
             {[
@@ -385,7 +375,10 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
               { title: "Fast updates", desc: "If a game patches, we usually have a fix within a day." },
               { title: "No bloat", desc: "Scripts do what they say. No extra garbage." }
             ].map((item, i) => (
-              <div key={i} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-purple-400/30 transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+              <div
+                key={i}
+                className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 hover:border-purple-400/30 transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+              >
                 <h3 className="font-bold text-white text-lg mb-1">{item.title}</h3>
                 <p className="text-white/40">{item.desc}</p>
               </div>
@@ -396,7 +389,10 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
 
       <section className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10">
         <div className="text-center">
-          <button onClick={() => setPage("scripts")} className="bg-white text-black font-bold text-lg px-12 py-5 rounded-lg hover:bg-white/90 transition inline-flex items-center gap-3">
+          <button
+            onClick={() => setPage("scripts")}
+            className="bg-white text-black font-bold text-lg px-12 py-5 rounded-lg hover:bg-white/90 transition inline-flex items-center gap-3"
+          >
             See all scripts <ArrowRight size={20} />
           </button>
           <p className="text-white/30 text-sm mt-6">Updated {SCRIPTS[0].updated}</p>
@@ -441,11 +437,26 @@ function ScriptsPage() {
       <div className="flex flex-wrap gap-3 mb-8">
         <div className="relative flex-1 min-w-[260px]">
           <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-purple-400/50 focus:outline-none transition-colors" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-purple-400/50 focus:outline-none transition-colors"
+          />
         </div>
         <div className="flex gap-2">
           {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setCat(c)} className={`px-4 py-2 rounded-lg border text-sm font-medium transition backdrop-blur-sm ${cat === c ? "bg-white text-black border-white" : "bg-black/40 border-white/10 text-white/50 hover:border-white/30 hover:bg-black/60"}`}>{c}</button>
+            <button
+              key={c}
+              onClick={() => setCat(c)}
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition backdrop-blur-sm ${
+                cat === c
+                  ? "bg-white text-black border-white"
+                  : "bg-black/40 border-white/10 text-white/50 hover:border-white/30 hover:bg-black/60"
+              }`}
+            >
+              {c}
+            </button>
           ))}
         </div>
       </div>
@@ -453,12 +464,26 @@ function ScriptsPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {filtered.map((s, i) => (
-            <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-purple-400/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all">
+            <motion.div
+              key={s.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: i * 0.03 }}
+              className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-purple-400/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] transition-all"
+            >
               <div className="relative h-32 bg-black/60">
                 <GameThumbnail game={s.game} className="absolute inset-0 w-full h-full opacity-70 hover:opacity-100 transition" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <span className="absolute bottom-2 left-3 text-xs font-bold text-white uppercase tracking-wider drop-shadow-md">{s.game}</span>
-                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm" style={{ color: s.tagColor, borderColor: s.tagColor, backgroundColor: s.tagColor + "20" }}>{s.tag}</span>
+                <span className="absolute bottom-2 left-3 text-xs font-bold text-white uppercase tracking-wider drop-shadow-md">
+                  {s.game}
+                </span>
+                <span
+                  className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm"
+                  style={{ color: s.tagColor, borderColor: s.tagColor, backgroundColor: s.tagColor + "20" }}
+                >
+                  {s.tag}
+                </span>
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-white mb-2">{s.name}</h3>
@@ -466,7 +491,10 @@ function ScriptsPage() {
                   <span className="flex items-center gap-1">{catIcons[s.category]} {s.category}</span>
                   <span className="flex items-center gap-1"><Clock size={10} /> {s.updated}</span>
                 </div>
-                <button onClick={() => { setModal(s); setCopied(false) }} className="w-full bg-white text-black font-bold text-sm py-2.5 rounded-lg hover:bg-white/90 transition flex items-center justify-center gap-2">
+                <button
+                  onClick={() => { setModal(s); setCopied(false) }}
+                  className="w-full bg-white text-black font-bold text-sm py-2.5 rounded-lg hover:bg-white/90 transition flex items-center justify-center gap-2"
+                >
                   <Code2 size={14} /> Get Script
                 </button>
               </div>
@@ -479,14 +507,28 @@ function ScriptsPage() {
 
       <AnimatePresence>
         {modal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setModal(null)}>
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => setModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl w-full max-w-lg shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
               <div className="flex items-start justify-between p-5 border-b border-white/10">
                 <div>
                   <span className="text-xs text-white/40 uppercase tracking-wider">{modal.game}</span>
                   <h2 className="text-xl font-bold text-white mt-1">{modal.name}</h2>
                 </div>
-                <button onClick={() => setModal(null)} className="text-white/40 hover:text-white"><X size={18} /></button>
+                <button onClick={() => setModal(null)} className="text-white/40 hover:text-white">
+                  <X size={18} />
+                </button>
               </div>
               <div className="p-5">
                 <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-lg p-4 mb-4 max-h-48 overflow-y-auto">
@@ -495,7 +537,12 @@ function ScriptsPage() {
                 <div className="bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 rounded-lg p-3 mb-4 flex gap-2 text-amber-400/80 text-xs">
                   <span>⚠️</span> Use a trusted executor. Not responsible for misuse.
                 </div>
-                <button onClick={() => copy(modal.code)} className={`w-full font-bold py-3 rounded-lg flex items-center justify-center gap-2 backdrop-blur-sm ${copied ? "bg-green-600/80 text-white" : "bg-white text-black hover:bg-white/90"}`}>
+                <button
+                  onClick={() => copy(modal.code)}
+                  className={`w-full font-bold py-3 rounded-lg flex items-center justify-center gap-2 backdrop-blur-sm ${
+                    copied ? "bg-green-600/80 text-white" : "bg-white text-black hover:bg-white/90"
+                  }`}
+                >
                   {copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy script</>}
                 </button>
               </div>
@@ -519,7 +566,13 @@ function UpdatesPage() {
 
       <div className="space-y-8">
         {CHANGELOG.map((entry, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-purple-400/30 transition-all">
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-purple-400/30 transition-all"
+          >
             <div className="flex items-baseline gap-3 mb-3">
               <span className="text-lg font-bold text-white">{entry.version}</span>
               <span className="text-sm text-white/30">{entry.date}</span>
@@ -539,12 +592,16 @@ function UpdatesPage() {
   )
 }
 
-// --- Main Page with Ambient Light Overlay ---
+// --- Main Page with CSS Light Beams ---
 export default function Page() {
   const [page, setPage] = useState("home")
   return (
     <>
-      <AmbientLightOverlay />
+      {/* CSS Purple Sun Rays */}
+      <div className="light-beam" />
+      <div className="light-beam-2" />
+      <div className="ambient-glow" />
+
       <Navbar page={page} setPage={setPage} />
       {page === "home" && <HomePage setPage={setPage} />}
       {page === "scripts" && <ScriptsPage />}
