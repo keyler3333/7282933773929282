@@ -14,31 +14,37 @@ const SCRIPTS = [
   {
     id: 1, name: "Combat Warriors Auto-Farm", game: "Combat Warriors",
     category: "Combat", updated: "Apr 18, 2026", tag: "HOT", tagColor: "#ef4444",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/4282985734/thumbnail_3",
     code: `-- Combat Warriors Auto-Farm v3.2\nlocal Players = game:GetService("Players")\nlocal LocalPlayer = Players.LocalPlayer\n\nlocal config = {\n    autoFarm = true,\n    autoCollect = true,\n    safeMode = true\n}\n\nprint("[XZX HUB] Script Loaded Successfully!")`
   },
   {
     id: 2, name: "Blox Fruits Devil Fruit Sniper", game: "Blox Fruits",
     category: "Farming", updated: "Apr 17, 2026", tag: "NEW", tagColor: "#22c55e",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/6995957656/thumbnail_1",
     code: `-- Blox Fruits Devil Fruit Sniper v1.9\nlocal ReplicatedStorage = game:GetService("ReplicatedStorage")\n\nlocal function snipeFruit()\n    -- XZX HUB Premium Script\nend\n\nprint("[XZX HUB] Devil Fruit Sniper Active!")`
   },
   {
     id: 3, name: "Arsenal Aimbot & ESP", game: "Arsenal",
     category: "Combat", updated: "Apr 16, 2026", tag: "HOT", tagColor: "#ef4444",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/1137054487/thumbnail_1",
     code: `-- Arsenal Premium ESP v2.5\nlocal RunService = game:GetService("RunService")\n\nlocal ESP = {\n    Enabled = true,\n    BoxESP = true,\n    NameESP = true,\n    HealthBar = true\n}\n\nprint("[XZX HUB] ESP Loaded!")`
   },
   {
     id: 4, name: "Pet Simulator Auto Collect", game: "Pet Simulator 99",
     category: "Farming", updated: "Apr 15, 2026", tag: "UPDATED", tagColor: "#f59e0b",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/111590543784570/thumbnail_1",
     code: `-- Pet Sim 99 Auto Collect v4.1\nlocal TweenService = game:GetService("TweenService")\n\nlocal function autoCollect()\n    -- XZX HUB Auto Collect Logic\nend\n\nprint("[XZX HUB] Auto Collect Running!")`
   },
   {
     id: 5, name: "Doors Entity ESP & Skip", game: "DOORS",
     category: "Utility", updated: "Apr 14, 2026", tag: "NEW", tagColor: "#22c55e",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/5689626702/thumbnail_1",
     code: `-- DOORS Entity Skip v1.2\nlocal Players = game:GetService("Players")\n\nlocal config = {\n    EntityESP = true,\n    AutoSkip = true,\n    HideCloset = false\n}\n\nprint("[XZX HUB] DOORS Script Active!")`
   },
   {
     id: 6, name: "Brookhaven Admin Panel", game: "Brookhaven RP",
     category: "Utility", updated: "Apr 12, 2026", tag: "STABLE", tagColor: "#6366f1",
+    thumbnail: "https://cdn.static.pikoya.com/robloxgo/games/16954636617/thumbnail_1",
     code: `-- Brookhaven Utility Panel v3.0\nlocal StarterGui = game:GetService("StarterGui")\n\nlocal utils = {\n    NoClip = false,\n    Speed = 16,\n    JumpPower = 50,\n    Fly = false\n}\n\nprint("[XZX HUB] Brookhaven Panel Ready!")`
   },
 ]
@@ -547,9 +553,15 @@ function ScriptsPage() {
               className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all"
             >
               <div className="h-28 bg-black/60 relative flex items-center justify-center border-b border-white/5">
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v22H20v-1.5zM0 20h2v20H0V20z'/%3E%3C/g%3E%3C/svg%3E")` }} />
-                <span className="relative z-10 font-display font-bold text-xs tracking-wider text-gray-500 uppercase">{s.game}</span>
-                <span className="absolute top-3 right-3 font-display font-bold text-[10px] tracking-wider px-2 py-0.5 rounded border" style={{ backgroundColor: `${s.tagColor}10`, color: s.tagColor, borderColor: `${s.tagColor}30` }}>
+                {/* Thumbnail Image */}
+                <img 
+                  src={s.thumbnail} 
+                  alt={s.game}
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 hover:opacity-80 transition-opacity"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+                <span className="relative z-10 font-display font-bold text-xs tracking-wider text-white uppercase drop-shadow-lg">{s.game}</span>
+                <span className="absolute top-3 right-3 font-display font-bold text-[10px] tracking-wider px-2 py-0.5 rounded border z-10" style={{ backgroundColor: `${s.tagColor}20`, color: s.tagColor, borderColor: `${s.tagColor}30` }}>
                   {s.tag}
                 </span>
               </div>
