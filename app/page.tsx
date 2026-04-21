@@ -13,12 +13,12 @@ import * as THREE from "three"
 const LOGO_URL = "https://i.postimg.cc/pLjwZ938/114A3ACE-CAC7-45B3-AB50-FDF67970EB2A.png"
 
 const UNIVERSE_IDS: Record<string, number> = {
-  "Combat Warriors": 2699330604,
-  "Blox Fruits":     2753915549,
-  "Arsenal":         286090429,
+  "Combat Warriors":  2699330604,
+  "Blox Fruits":      2753915549,
+  "Arsenal":          286090429,
   "Pet Simulator 99": 8737899170,
-  "DOORS":           6516141723,
-  "Brookhaven RP":   4924922222,
+  "DOORS":            6516141723,
+  "Brookhaven RP":    4924922222,
 }
 
 const SCRIPTS = [
@@ -101,17 +101,17 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-// ── Real Roblox thumbnail via API ──────────────────────────────────────────────
-function GameThumbnail({
-  game, className = ""
-}: { game: string; className?: string }) {
+// ── Roblox thumbnail via roproxy (CORS-friendly mirror) ───────────────────────
+function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
   const [url, setUrl] = useState<string | null>(null)
   const [err, setErr] = useState(false)
   const uid = UNIVERSE_IDS[game]
 
   useEffect(() => {
     if (!uid) { setErr(true); return }
-    fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${uid}&size=150x150&format=Png&isCircular=false`)
+    fetch(
+      `https://thumbnails.roproxy.com/v1/games/icons?universeIds=${uid}&size=150x150&format=Png&isCircular=false`
+    )
       .then(r => r.json())
       .then(d => {
         const img = d?.data?.[0]?.imageUrl
@@ -122,11 +122,10 @@ function GameThumbnail({
   }, [uid])
 
   if (err || !url) {
-    // styled fallback — never a broken image icon
     return (
       <div className={`flex items-center justify-center bg-[#0d0d14] ${className}`}>
         <span className="text-[11px] font-bold text-white/20 uppercase tracking-widest select-none">
-          {game.split(" ").map(w => w[0]).join("").slice(0, 3)}
+          {game.split(" ").map((w: string) => w[0]).join("").slice(0, 3)}
         </span>
       </div>
     )
@@ -171,7 +170,6 @@ function ParticleField() {
       pos[i*3]   = Math.sin(p)*Math.cos(t)*r
       pos[i*3+1] = Math.sin(p)*Math.sin(t)*r
       pos[i*3+2] = Math.cos(p)*r
-      // violet-tinted particles
       const isAccent = Math.random() < 0.1
       const b = 0.35 + Math.random() * 0.45
       col[i*3]   = isAccent ? 0.55 : b
@@ -206,7 +204,14 @@ function ParticleField() {
         <bufferAttribute attach="attributes-position" count={count} array={buf.current.pos} itemSize={3} />
         <bufferAttribute attach="attributes-color"    count={count} array={buf.current.col} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.024} vertexColors transparent blending={THREE.AdditiveBlending} depthWrite={false} opacity={0.75} />
+      <pointsMaterial
+        size={0.024}
+        vertexColors
+        transparent
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        opacity={0.75}
+      />
     </points>
   )
 }
@@ -226,7 +231,9 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
 
   return (
     <motion.nav
-      initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.5 }}
+      initial={{ y: -80 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
       className="fixed top-0 left-0 right-0 z-50 px-5"
     >
       <div className={`mx-auto max-w-6xl mt-3 rounded-2xl transition-all duration-300 ${
@@ -235,7 +242,7 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
           : "bg-[#07070f]/40 backdrop-blur-md border border-white/5"
       }`}>
         <div className="flex items-center justify-between px-5 py-3.5">
-          {/* Logo */}
+
           <button onClick={() => setPage("home")} className="flex items-center gap-3 group">
             <div className="relative w-9 h-9 rounded-xl overflow-hidden ring-1 ring-white/10 group-hover:ring-violet-500/40 transition-all">
               <img src={LOGO_URL} alt="XZX" className="w-full h-full object-cover" />
@@ -245,14 +252,13 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
             </span>
           </button>
 
-          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
             {links.map(([p, label]) => (
               <button
                 key={p}
                 onClick={() => setPage(p)}
                 className={`relative px-4 py-1.5 rounded-lg font-display font-semibold text-[13px] tracking-wide transition-colors ${
-                  page === p ? "text-white bg-white/8" : "text-white/40 hover:text-white/70"
+                  page === p ? "text-white" : "text-white/40 hover:text-white/70"
                 }`}
               >
                 {label}
@@ -266,16 +272,17 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={() => setPage("scripts")}
-              className="bg-violet-600 hover:bg-violet-500 text-white font-display font-bold text-[12px] tracking-widest uppercase px-4 py-2 rounded-lg transition-colors"
-            >
-              Get Scripts
-            </button>
-          </div>
+          <button
+            onClick={() => setPage("scripts")}
+            className="hidden md:flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white font-display font-bold text-[12px] tracking-widest uppercase px-4 py-2 rounded-lg transition-colors"
+          >
+            Get Scripts
+          </button>
 
-          <button onClick={() => setOpen(!open)} className="md:hidden text-white/60 hover:text-white transition-colors">
+          <button
+            onClick={() => setOpen(!open)}
+            className="md:hidden text-white/60 hover:text-white transition-colors"
+          >
             {open ? <XIcon size={20} /> : <Menu size={20} />}
           </button>
         </div>
@@ -321,10 +328,7 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
             <Suspense fallback={null}><ParticleField /></Suspense>
           </Canvas>
         </div>
-
-        {/* gradient fade */}
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#07070f]/70 via-[#07070f]/30 to-[#07070f]" />
-        {/* subtle vignette */}
         <div className="absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, #07070f 100%)" }} />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-20 text-center">
@@ -396,7 +400,6 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
             </a>
           </motion.div>
 
-          {/* stats row */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -439,10 +442,10 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
 
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: <Code2 size={18} />, label: "Clean Code", sub: "No bloat. Lightweight loader." },
-              { icon: <Shield size={18} />, label: "Undetected", sub: "Passes detection on every release." },
+              { icon: <Code2 size={18} />, label: "Clean Code",    sub: "No bloat. Lightweight loader." },
+              { icon: <Shield size={18} />, label: "Undetected",   sub: "Passes detection on every release." },
               { icon: <RefreshCw size={18} />, label: "Fast Updates", sub: "Most patches fixed in under a day." },
-              { icon: <Star size={18} />, label: "Tested Live", sub: "Every script runs before it ships." },
+              { icon: <Star size={18} />, label: "Tested Live",    sub: "Every script runs before it ships." },
             ].map(({ icon, label, sub }, i) => (
               <motion.div
                 key={label}
@@ -479,9 +482,9 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
 
         <div className="grid md:grid-cols-3 gap-4">
           {[
-            { icon: <Zap size={26} />, t: "Fast Execution", d: "Loads fast, runs clean. The loader stays out of the way and doesn't spike your frame time." },
+            { icon: <Zap size={26} />,       t: "Fast Execution",    d: "Loads fast, runs clean. The loader stays out of the way and doesn't spike your frame time." },
             { icon: <RefreshCw size={26} />, t: "Patch-Proof Updates", d: "We watch for game patches constantly. Most scripts are back up within a few hours of a break." },
-            { icon: <Shield size={26} />, t: "Undetected", d: "Anti-detection is built into every script. Nothing gets pushed until it clears our checks." },
+            { icon: <Shield size={26} />,    t: "Undetected",         d: "Anti-detection is built into every script. Nothing gets pushed until it clears our checks." },
           ].map(({ icon, t, d }, i) => (
             <motion.div
               key={t}
@@ -509,7 +512,6 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
           viewport={{ once: true }}
           className="relative rounded-3xl border border-white/8 bg-white/[0.025] backdrop-blur-sm p-14 text-center overflow-hidden"
         >
-          {/* subtle glow behind */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center">
             <div className="w-64 h-64 rounded-full bg-violet-600/10 blur-3xl" />
           </div>
@@ -533,10 +535,10 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
 
 // ── Scripts ────────────────────────────────────────────────────────────────────
 function ScriptsPage() {
-  const [search, setSearch]   = useState("")
-  const [cat, setCat]         = useState("All")
-  const [modal, setModal]     = useState<typeof SCRIPTS[0] | null>(null)
-  const [copied, setCopied]   = useState(false)
+  const [search, setSearch] = useState("")
+  const [cat, setCat]       = useState("All")
+  const [modal, setModal]   = useState<typeof SCRIPTS[0] | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const catIcons: Record<string, JSX.Element> = {
     Combat:  <Sword size={11} />,
@@ -578,7 +580,7 @@ function ScriptsPage() {
             className="w-full bg-white/[0.04] border border-white/8 rounded-xl py-3 pl-11 pr-4 text-white/80 placeholder-white/20 focus:border-violet-500/40 focus:outline-none font-display text-[13px] transition-colors"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {CATEGORIES.map(c => (
             <button
               key={c}
@@ -608,19 +610,16 @@ function ScriptsPage() {
               transition={{ delay: i * 0.05 }}
               className="bg-white/[0.03] border border-white/8 rounded-2xl overflow-hidden hover:border-violet-500/25 hover:bg-white/[0.05] transition-all group"
             >
-              {/* Thumbnail slot */}
+              {/* Thumbnail */}
               <div className="relative h-32 overflow-hidden bg-[#0d0d14]">
                 <GameThumbnail
                   game={s.game}
                   className="absolute inset-0 w-full h-full opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                 />
-                {/* overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d14] via-[#0d0d14]/30 to-transparent" />
-                {/* game label */}
                 <span className="absolute bottom-2.5 left-3.5 font-display font-bold text-[11px] tracking-wider text-white/80 uppercase drop-shadow-md">
                   {s.game}
                 </span>
-                {/* tag badge */}
                 <span
                   className="absolute top-2.5 right-2.5 font-display font-bold text-[10px] tracking-widest px-2 py-0.5 rounded-md border backdrop-blur-sm"
                   style={{
@@ -633,7 +632,7 @@ function ScriptsPage() {
                 </span>
               </div>
 
-              {/* Card body */}
+              {/* Body */}
               <div className="p-4">
                 <h3 className="font-display font-bold text-[15px] text-white mb-2 leading-snug">{s.name}</h3>
                 <div className="flex items-center gap-3 mb-4">
@@ -736,7 +735,6 @@ function UpdatesPage() {
       </motion.div>
 
       <div className="grid lg:grid-cols-[1fr_300px] gap-10">
-        {/* Timeline */}
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-violet-500/30 via-white/10 to-transparent" />
           <div className="space-y-10">
@@ -779,7 +777,6 @@ function UpdatesPage() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
