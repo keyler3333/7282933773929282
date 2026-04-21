@@ -1,11 +1,15 @@
 'use client'
 
-import { useState } from "react"
-import {
+import { useState, useEffect, useRef, Suspense } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { 
   Zap, RefreshCw, Shield, Search, Copy, Check, X,
   ExternalLink, ChevronRight, Menu, XIcon, Clock,
-  ArrowRight, Star, Code2, Sword, Wheat, Wrench
+  ArrowRight, Star, Code2, Sword, Wheat, Wrench,
+  Github, Twitter, Disc
 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import * as THREE from 'three'
 
 const SCRIPTS = [
   {
@@ -87,190 +91,390 @@ const CHANGELOG = [
 
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
-function Navbar({ page, setPage }) {
-  const [mobileOpen, setMobileOpen] = useState(false)
+// --- 3D Particle Field Component ---
+function ParticleField() {
+  const { viewport } = useThree()
+  const count = 1500
+  const pointsRef = useRef()
+  const mouseRef = useRef({ x: 0, y: 0 })
+  const clock = new THREE.Clock()
+
+  const particles = useRef({
+    positions: new Float32Array(count * 3),
+    colors: new Float32Array(count * 3)
+  })
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  useEffect(() => {
+    const positions = particles.current.positions
+    const colors = particles.current.colors
+    
+    for (let i = 0; i < count; i++) {
+      const r = 3 + Math.random() * 5
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      
+      positions[i*3] = Math.sin(phi) * Math.cos(theta) * r
+      positions[i*3+1] = Math.sin(phi) * Math.sin(theta) * r
+      positions[i*3+2] = Math.cos(phi) * r
+      
+      const shade = 0.5 + Math.random() * 0.5
+      colors[i*3] = shade
+      colors[i*3+1] = shade
+      colors[i*3+2] = shade
+    }
+  }, [count])
+
+  useFrame(() => {
+    if (!pointsRef.current) return
+    
+    const time = clock.getElapsedTime()
+    const positions = pointsRef.current.geometry.attributes.position.array
+    const mouse = mouseRef.current
+    
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3
+      const x = positions[i3]
+      const y = positions[i3+1]
+      const z = positions[i3+2]
+      
+      const dx = x + mouse.x * 1.5
+      const dy = y + mouse.y * 1.5
+      const dz = z + Math.sin(time * 0.2 + x) * 0.1
+      
+      positions[i3] += dx * 0.001
+      positions[i3+1] += dy * 0.001
+      positions[i3+2] += (dz - positions[i3+2]) * 0.001
+      
+      const dist = Math.sqrt(x*x + y*y + z*z)
+      if (dist > 8) {
+        positions[i3] *= 0.99
+        positions[i3+1] *= 0.99
+        positions[i3+2] *= 0.99
+      }
+    }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true
+    pointsRef.current.rotation.y += 0.0005
+  })
 
   return (
-    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "0 24px" }}>
-      <div className="glass-heavy" style={{
-        maxWidth: 1100, margin: "16px auto 0", borderRadius: 10,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 24px",
-      }}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 6,
-            background: "linear-gradient(135deg, #0ea5e9, #a855f7)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 0 16px rgba(56,189,248,0.4)",
-          }}>
-            <span style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, fontSize: 13, color: "#fff" }}>XZ</span>
-          </div>
-          <span className="logo-text" style={{ color: "#e2e8f0" }}>
-            XZX <span style={{ color: "#38bdf8" }}>HUB</span>
-          </span>
-        </button>
-
-        <div style={{ display: "flex", gap: 32, alignItems: "center" }} className="desktop-nav">
-          {[["home","Home"],["scripts","Scripts"],["updates","Updates"]].map(([p, label]) => (
-            <button key={p} className={`nav-link${page===p?" active":""}`} onClick={() => setPage(p)}>{label}</button>
-          ))}
-        </div>
-
-        <button className="btn-primary desktop-nav" style={{ padding: "8px 20px", fontSize: 13 }} onClick={() => setPage("scripts")}>
-          Get Scripts
-        </button>
-
-        <button onClick={() => setMobileOpen(!mobileOpen)}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#e2e8f0", display: "none" }}
-          className="mobile-menu-btn">
-          {mobileOpen ? <XIcon size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      {mobileOpen && (
-        <div className="glass-heavy" style={{
-          maxWidth: 1100, margin: "8px auto 0", borderRadius: 10, padding: "16px 24px",
-          display: "flex", flexDirection: "column", gap: 16,
-        }}>
-          {[["home","Home"],["scripts","Scripts"],["updates","Updates"]].map(([p, label]) => (
-            <button key={p} className={`nav-link${page===p?" active":""}`}
-              onClick={() => { setPage(p); setMobileOpen(false) }}
-              style={{ textAlign: "left", width: "fit-content" }}>{label}</button>
-          ))}
-        </div>
-      )}
-    </nav>
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={particles.current.positions}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={particles.current.colors}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.025}
+        vertexColors
+        transparent
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+        opacity={0.8}
+      />
+    </points>
   )
 }
 
-function HomePage({ setPage }) {
+// --- Navbar Component ---
+function Navbar({ page, setPage }) {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <section className="grid-bg" style={{
-        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "120px 24px 80px", position: "relative", overflow: "hidden",
-      }}>
-        <div className="hero-orb" style={{ width: 500, height: 500, background: "rgba(56,189,248,0.08)", top: "10%", left: "-10%" }} />
-        <div className="hero-orb" style={{ width: 400, height: 400, background: "rgba(168,85,247,0.08)", bottom: "5%", right: "-5%" }} />
-
-        <div style={{ maxWidth: 800, textAlign: "center", position: "relative", zIndex: 1 }}>
-          <div className="anim-fade-up-1" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-            <div className="glass" style={{ borderRadius: 999, padding: "6px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e", animation: "pulse-glow 2s infinite" }} />
-              <span style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: "0.1em", color: "rgba(226,232,240,0.8)" }}>
-                ALL SCRIPTS UNDETECTED — UPDATED DAILY
-              </span>
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="fixed top-0 left-0 right-0 z-50 px-6"
+    >
+      <div className={`mx-auto max-w-7xl mt-4 rounded-xl transition-all duration-300 ${
+        scrolled ? 'bg-black/80 backdrop-blur-xl border border-white/10' : 'bg-black/40 backdrop-blur-md border border-white/5'
+      }`}>
+        <div className="flex items-center justify-between px-6 py-4">
+          <button onClick={() => setPage("home")} className="flex items-center gap-3 group">
+            <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-400 rounded-lg flex items-center justify-center shadow-lg shadow-white/20 group-hover:shadow-white/30 transition-all">
+              <span className="font-display font-bold text-sm text-black">XZ</span>
             </div>
-          </div>
+            <span className="logo-text text-white text-xl font-display font-bold tracking-wider">
+              XZX <span className="text-gray-400">HUB</span>
+            </span>
+          </button>
 
-          <h1 className="font-display anim-fade-up-2" style={{ fontSize: "clamp(44px, 8vw, 84px)", fontWeight: 700, lineHeight: 1.05, marginBottom: 24 }}>
-            <span className="shimmer-text">XZX HUB:</span>
-            <br />
-            <span style={{ color: "#e2e8f0" }}>Powering Your</span>
-            <br />
-            <span style={{ color: "#e2e8f0" }}>Gameplay.</span>
-          </h1>
-
-          <p className="anim-fade-up-3" style={{ fontSize: 17, color: "rgba(226,232,240,0.55)", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 40px" }}>
-            Elite Roblox scripts engineered for performance. Stay ahead of every update. Execute with confidence.
-          </p>
-
-          <div className="anim-fade-up-4" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button className="btn-primary" onClick={() => setPage("scripts")} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              View Scripts <ChevronRight size={16} />
-            </button>
-            <button className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              Join Discord <ExternalLink size={14} />
-            </button>
-          </div>
-
-          <div className="anim-fade-up-5" style={{ display: "flex", gap: 40, justifyContent: "center", marginTop: 64, flexWrap: "wrap" }}>
-            {[["50+","Scripts"],["99.9%","Uptime"],["10K+","Users"],["24h","Updates"]].map(([val, label]) => (
-              <div key={label} style={{ textAlign: "center" }}>
-                <div className="font-display" style={{ fontSize: 28, fontWeight: 700, color: "#38bdf8" }}>{val}</div>
-                <div style={{ fontSize: 12, letterSpacing: "0.1em", color: "rgba(226,232,240,0.4)", marginTop: 4, fontFamily: "Rajdhani, sans-serif", fontWeight: 600, textTransform: "uppercase" }}>{label}</div>
-              </div>
+          <div className="hidden md:flex items-center gap-8">
+            {[["home","Home"],["scripts","Scripts"],["updates","Updates"]].map(([p, label]) => (
+              <button 
+                key={p} 
+                onClick={() => setPage(p)}
+                className={`relative font-display font-semibold text-sm tracking-wider transition-colors ${
+                  page === p ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                {label}
+                {page === p && (
+                  <motion.div layoutId="activeNav" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white" />
+                )}
+              </button>
             ))}
           </div>
+
+          <button className="hidden md:block bg-white text-black font-display font-bold text-xs tracking-wider px-5 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+            Get Scripts
+          </button>
+
+          <button 
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden text-white"
+          >
+            {mobileOpen ? <XIcon size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-t border-white/10"
+            >
+              <div className="flex flex-col gap-4 px-6 py-4">
+                {[["home","Home"],["scripts","Scripts"],["updates","Updates"]].map(([p, label]) => (
+                  <button 
+                    key={p} 
+                    onClick={() => { setPage(p); setMobileOpen(false) }}
+                    className={`text-left font-display font-semibold text-sm tracking-wider ${
+                      page === p ? 'text-white' : 'text-gray-400'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
+  )
+}
+
+// --- HomePage Component ---
+function HomePage({ setPage }) {
+  return (
+    <div className="min-h-screen">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
+            <Suspense fallback={null}>
+              <ParticleField />
+            </Suspense>
+          </Canvas>
+        </div>
+        
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-6 pt-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 mb-8"
+          >
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="font-display font-semibold text-xs tracking-wider text-gray-300">
+              ALL SCRIPTS UNDETECTED — UPDATED DAILY
+            </span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="font-display text-6xl md:text-8xl font-bold leading-none mb-6"
+          >
+            <span className="text-white">XZX HUB:</span>
+            <br />
+            <span className="text-gray-400">Powering Your</span>
+            <br />
+            <span className="text-gray-200">Gameplay.</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-gray-400 text-lg max-w-xl mx-auto mb-10"
+          >
+            Elite Roblox scripts engineered for performance. Stay ahead of every update. Execute with confidence.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="flex flex-wrap gap-4 justify-center"
+          >
+            <button 
+              onClick={() => setPage("scripts")}
+              className="bg-white text-black font-display font-bold text-sm tracking-wider px-8 py-3 rounded-lg hover:bg-gray-200 transition-all flex items-center gap-2 group"
+            >
+              View Scripts <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button className="bg-transparent text-white border border-white/20 font-display font-bold text-sm tracking-wider px-8 py-3 rounded-lg hover:bg-white/5 transition-all flex items-center gap-2">
+              <Disc size={16} /> Join Discord
+            </button>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex flex-wrap gap-12 justify-center mt-16"
+          >
+            {[["50+","Scripts"],["99.9%","Uptime"],["10K+","Users"],["24h","Updates"]].map(([val, label]) => (
+              <div key={label} className="text-center">
+                <div className="font-display text-3xl font-bold text-white">{val}</div>
+                <div className="text-[10px] tracking-wider text-gray-400 font-display font-semibold">{label}</div>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      <section style={{ padding: "100px 24px", maxWidth: 1100, margin: "0 auto" }}>
-        <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid md:grid-cols-2 gap-12 items-center"
+        >
           <div>
-            <div className="badge" style={{ background: "rgba(56,189,248,0.1)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.2)", marginBottom: 16, display: "inline-block" }}>
+            <span className="font-display text-xs tracking-wider text-gray-400 border border-white/20 px-3 py-1 rounded-full">
               ABOUT US
-            </div>
-            <h2 className="font-display" style={{ fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, color: "#e2e8f0", lineHeight: 1.1, marginBottom: 20 }}>
-              Built by Players,<br /><span style={{ color: "#38bdf8" }}>For Players.</span>
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-6 mb-4">
+              Built by Players,<br /><span className="text-gray-400">For Players.</span>
             </h2>
-            <p style={{ color: "rgba(226,232,240,0.55)", lineHeight: 1.8, fontSize: 15, marginBottom: 16 }}>
+            <p className="text-gray-400 text-base mb-4">
               XZX HUB is a team of dedicated developers obsessed with crafting the cleanest, fastest, and most reliable Roblox scripts available anywhere.
             </p>
-            <p style={{ color: "rgba(226,232,240,0.55)", lineHeight: 1.8, fontSize: 15 }}>
+            <p className="text-gray-400 text-base">
               Every script is hand-coded, tested across servers, and updated within hours of game patches. We don't cut corners.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div className="grid grid-cols-2 gap-4">
             {[
               { icon: <Code2 size={20} />, label: "Clean Code", sub: "No bloat. Pure performance." },
               { icon: <Shield size={20} />, label: "Undetected", sub: "Bypass detection systems." },
               { icon: <RefreshCw size={20} />, label: "Daily Updates", sub: "Patch-proof within 24h." },
               { icon: <Star size={20} />, label: "Premium QA", sub: "Every script tested live." },
-            ].map(({ icon, label, sub }) => (
-              <div key={label} className="glass feature-card" style={{ borderRadius: 10, padding: 20 }}>
-                <div style={{ color: "#38bdf8", marginBottom: 10 }}>{icon}</div>
-                <div className="font-display" style={{ fontWeight: 700, fontSize: 15, color: "#e2e8f0", marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 12, color: "rgba(226,232,240,0.45)" }}>{sub}</div>
-              </div>
+            ].map(({ icon, label, sub }, i) => (
+              <motion.div 
+                key={label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all"
+              >
+                <div className="text-white mb-3">{icon}</div>
+                <div className="font-display font-bold text-sm text-white mb-1">{label}</div>
+                <div className="text-xs text-gray-400">{sub}</div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <section style={{ padding: "0 24px 100px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 56 }}>
-          <div className="badge" style={{ background: "rgba(168,85,247,0.1)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.2)", marginBottom: 16, display: "inline-block" }}>
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <span className="font-display text-xs tracking-wider text-gray-400 border border-white/20 px-3 py-1 rounded-full">
             OUR STRENGTHS
-          </div>
-          <h2 className="font-display" style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: "#e2e8f0" }}>
+          </span>
+          <h2 className="font-display text-4xl font-bold text-white mt-6">
             Why Choose XZX HUB?
           </h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+        </motion.div>
+        <div className="grid md:grid-cols-3 gap-6">
           {[
-            { icon: <Zap size={28} />, color: "#f59e0b", title: "Fast Execution", sub: "Optimized script loader that injects in under 200ms. Zero lag. Zero stuttering. Just clean execution every single time." },
-            { icon: <RefreshCw size={28} />, color: "#38bdf8", title: "Frequent Updates", sub: "Our team monitors game patches 24/7. Scripts are hot-fixed within hours of any Roblox update — you're never left broken." },
-            { icon: <Shield size={28} />, color: "#22c55e", title: "Undetected", sub: "Advanced anti-detection layers built into every script. We study bypass techniques continuously to keep your account safe." },
-          ].map(({ icon, color, title, sub }) => (
-            <div key={title} className="glass feature-card" style={{ borderRadius: 12, padding: "32px 28px" }}>
-              <div style={{ width: 52, height: 52, borderRadius: 10, marginBottom: 20, background: `${color}18`, border: `1px solid ${color}30`, display: "flex", alignItems: "center", justifyContent: "center", color }}>{icon}</div>
-              <h3 className="font-display" style={{ fontSize: 22, fontWeight: 700, color: "#e2e8f0", marginBottom: 10 }}>{title}</h3>
-              <p style={{ color: "rgba(226,232,240,0.5)", lineHeight: 1.7, fontSize: 14 }}>{sub}</p>
-            </div>
+            { icon: <Zap size={28} />, title: "Fast Execution", sub: "Optimized script loader that injects in under 200ms. Zero lag. Zero stuttering." },
+            { icon: <RefreshCw size={28} />, title: "Frequent Updates", sub: "Our team monitors game patches 24/7. Scripts are hot-fixed within hours." },
+            { icon: <Shield size={28} />, title: "Undetected", sub: "Advanced anti-detection layers built into every script. Your account stays safe." },
+          ].map(({ icon, title, sub }, i) => (
+            <motion.div 
+              key={title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-8 hover:border-white/20 transition-all"
+            >
+              <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center text-white mb-6">
+                {icon}
+              </div>
+              <h3 className="font-display text-xl font-bold text-white mb-3">{title}</h3>
+              <p className="text-gray-400 text-sm">{sub}</p>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      <section style={{ padding: "0 24px 100px", maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ borderRadius: 16, padding: "56px 40px", textAlign: "center", background: "linear-gradient(135deg, rgba(56,189,248,0.08), rgba(168,85,247,0.08))", border: "1px solid rgba(56,189,248,0.15)", position: "relative", overflow: "hidden" }}>
-          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 50% 0%, rgba(56,189,248,0.08), transparent 60%)", pointerEvents: "none" }} />
-          <h2 className="font-display" style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: "#e2e8f0", marginBottom: 16, position: "relative" }}>
-            Ready to <span style={{ color: "#38bdf8" }}>Dominate?</span>
+      <section className="py-24 px-6 max-w-4xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center"
+        >
+          <h2 className="font-display text-4xl font-bold text-white mb-4">
+            Ready to <span className="text-gray-400">Dominate?</span>
           </h2>
-          <p style={{ color: "rgba(226,232,240,0.5)", marginBottom: 32, fontSize: 15, position: "relative" }}>
+          <p className="text-gray-400 mb-8">
             Browse our full script library and elevate your gameplay today.
           </p>
-          <button className="btn-primary" onClick={() => setPage("scripts")} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, fontSize: 16, padding: "14px 36px" }}>
-            Browse Scripts <ArrowRight size={16} />
+          <button 
+            onClick={() => setPage("scripts")}
+            className="bg-white text-black font-display font-bold text-sm tracking-wider px-10 py-4 rounded-lg hover:bg-gray-200 transition-all inline-flex items-center gap-2 group"
+          >
+            Browse Scripts <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>
-        </div>
+        </motion.div>
       </section>
     </div>
   )
 }
 
+// --- ScriptsPage Component ---
 function ScriptsPage() {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("All")
@@ -292,139 +496,223 @@ function ScriptsPage() {
   const catIcons = { Combat: <Sword size={12} />, Farming: <Wheat size={12} />, Utility: <Wrench size={12} /> }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "120px 24px 80px", maxWidth: 1100, margin: "0 auto" }}>
-      <div style={{ marginBottom: 48 }}>
-        <div className="badge anim-fade-up-1" style={{ background: "rgba(56,189,248,0.1)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.2)", marginBottom: 16, display: "inline-block" }}>SCRIPT VAULT</div>
-        <h1 className="font-display anim-fade-up-2" style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, color: "#e2e8f0", marginBottom: 12 }}>Script Library</h1>
-        <p className="anim-fade-up-3" style={{ color: "rgba(226,232,240,0.5)", fontSize: 15 }}>{SCRIPTS.length} scripts available — all tested and undetected.</p>
-      </div>
+    <div className="min-h-screen pt-28 pb-16 px-6 max-w-7xl mx-auto">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-12"
+      >
+        <span className="font-display text-xs tracking-wider text-gray-400 border border-white/20 px-3 py-1 rounded-full">
+          SCRIPT VAULT
+        </span>
+        <h1 className="font-display text-5xl font-bold text-white mt-6 mb-3">Script Library</h1>
+        <p className="text-gray-400">{SCRIPTS.length} scripts available — all tested and undetected.</p>
+      </motion.div>
 
-      <div className="anim-fade-up-3" style={{ display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: "1 1 280px" }}>
-          <Search size={16} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(226,232,240,0.3)", pointerEvents: "none" }} />
-          <input className="search-input" placeholder="Search scripts or games..." value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex flex-wrap gap-4 mb-10">
+        <div className="relative flex-1 min-w-[280px]">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input 
+            className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:border-white/30 focus:outline-none transition-colors"
+            placeholder="Search scripts or games..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="flex flex-wrap gap-2">
           {CATEGORIES.map(cat => (
-            <button key={cat} className={`tag-btn${category===cat?" active":""}`} onClick={() => setCategory(cat)}>{cat}</button>
+            <button 
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`font-display font-semibold text-xs tracking-wider px-4 py-2 rounded-lg border transition-all ${
+                category === cat 
+                  ? 'bg-white text-black border-white' 
+                  : 'bg-transparent text-gray-400 border-white/20 hover:border-white/40'
+              }`}
+            >
+              {cat}
+            </button>
           ))}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
-        {filtered.map((s, i) => (
-          <div key={s.id} className="glass script-card" style={{ borderRadius: 12, overflow: "hidden", animationDelay: `${i * 0.06}s` }}>
-            <div style={{ height: 120, position: "relative", background: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ position: "absolute", inset: 0, opacity: 0.08, backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2338bdf8' fill-opacity='1'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v22H20v-1.5zM0 20h2v20H0V20zm4 0h2v20H4V20zm4 0h2v20H8V20zm4 0h2v20h-2V20zm4 0h2v20h-2V20z'/%3E%3C/g%3E%3C/svg%3E\")" }} />
-              <div className="font-display" style={{ position: "relative", zIndex: 1, fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", color: "rgba(226,232,240,0.35)", textTransform: "uppercase" }}>{s.game}</div>
-              <div className="badge" style={{ position: "absolute", top: 12, right: 12, background: `${s.tagColor}20`, color: s.tagColor, border: `1px solid ${s.tagColor}40` }}>{s.tag}</div>
-            </div>
-            <div style={{ padding: "20px" }}>
-              <h3 className="font-display" style={{ fontSize: 17, fontWeight: 700, color: "#e2e8f0", marginBottom: 8, lineHeight: 1.3 }}>{s.name}</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(226,232,240,0.35)", fontFamily: "Rajdhani, sans-serif", fontWeight: 600, letterSpacing: "0.08em" }}>{catIcons[s.category]} {s.category.toUpperCase()}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "rgba(226,232,240,0.35)", fontFamily: "Rajdhani, sans-serif", fontWeight: 600 }}><Clock size={10} /> {s.updated}</span>
+      <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <AnimatePresence>
+          {filtered.map((s, i) => (
+            <motion.div 
+              key={s.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all"
+            >
+              <div className="h-28 bg-black/60 relative flex items-center justify-center border-b border-white/5">
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2V0h2v22H20v-1.5zM0 20h2v20H0V20z'/%3E%3C/g%3E%3C/svg%3E")` }} />
+                <span className="relative z-10 font-display font-bold text-xs tracking-wider text-gray-500 uppercase">{s.game}</span>
+                <span className="absolute top-3 right-3 font-display font-bold text-[10px] tracking-wider px-2 py-0.5 rounded border" style={{ backgroundColor: `${s.tagColor}10`, color: s.tagColor, borderColor: `${s.tagColor}30` }}>
+                  {s.tag}
+                </span>
               </div>
-              <button className="btn-primary" style={{ width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: 8, padding: "10px" }}
-                onClick={() => { setModal(s); setCopied(false) }}>
-                <Code2 size={14} /> Get Script
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+              <div className="p-5">
+                <h3 className="font-display font-bold text-base text-white mb-2">{s.name}</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1 text-[10px] tracking-wider text-gray-400 font-display font-semibold">
+                    {catIcons[s.category]} {s.category.toUpperCase()}
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] tracking-wider text-gray-400 font-display">
+                    <Clock size={10} /> {s.updated}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => { setModal(s); setCopied(false) }}
+                  className="w-full bg-white text-black font-display font-bold text-xs tracking-wider py-2.5 rounded-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                >
+                  <Code2 size={14} /> Get Script
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: "center", padding: "80px 0", color: "rgba(226,232,240,0.3)" }}>
-          <Code2 size={40} style={{ margin: "0 auto 16px", display: "block" }} />
-          <p className="font-display" style={{ fontSize: 18, fontWeight: 600 }}>No scripts found.</p>
+        <div className="text-center py-20">
+          <Code2 size={40} className="mx-auto mb-4 text-gray-500" />
+          <p className="font-display text-lg font-semibold text-gray-400">No scripts found.</p>
         </div>
       )}
 
-      {modal && (
-        <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-          onClick={() => setModal(null)}>
-          <div className="modal-panel glass-heavy" style={{ borderRadius: 14, width: "100%", maxWidth: 560, padding: 32, boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.15)" }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-              <div>
-                <div className="badge" style={{ background: "rgba(56,189,248,0.1)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.2)", marginBottom: 8, display: "inline-block" }}>{modal.game}</div>
-                <h2 className="font-display" style={{ fontSize: 22, fontWeight: 700, color: "#e2e8f0", lineHeight: 1.2 }}>{modal.name}</h2>
+      <AnimatePresence>
+        {modal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => setModal(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-black border border-white/20 rounded-xl w-full max-w-lg p-8 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <span className="font-display text-[10px] tracking-wider text-gray-400 border border-white/20 px-2 py-0.5 rounded">
+                    {modal.game}
+                  </span>
+                  <h2 className="font-display text-xl font-bold text-white mt-2">{modal.name}</h2>
+                </div>
+                <button onClick={() => setModal(null)} className="text-gray-400 hover:text-white transition-colors">
+                  <X size={18} />
+                </button>
               </div>
-              <button onClick={() => setModal(null)} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(226,232,240,0.5)", flexShrink: 0 }}>
-                <X size={14} />
+              <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-5 max-h-48 overflow-y-auto">
+                <pre className="font-mono text-xs text-gray-300 whitespace-pre-wrap">{modal.code}</pre>
+              </div>
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 mb-5 flex gap-2">
+                <span className="text-amber-500">⚠️</span>
+                <span className="text-amber-500/80 text-xs">Use a trusted Roblox executor. XZX HUB is not responsible for misuse.</span>
+              </div>
+              <button 
+                onClick={() => handleCopy(modal.code)}
+                className={`w-full font-display font-bold text-sm tracking-wider py-3 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  copied ? 'bg-green-600 text-white' : 'bg-white text-black hover:bg-gray-200'
+                }`}
+              >
+                {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy to Clipboard</>}
               </button>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.5)", borderRadius: 8, padding: 16, marginBottom: 20, border: "1px solid rgba(255,255,255,0.06)", maxHeight: 200, overflowY: "auto" }}>
-              <pre style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace", fontSize: 12, color: "rgba(226,232,240,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{modal.code}</pre>
-            </div>
-            <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 20, display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <span style={{ fontSize: 13 }}>⚠️</span>
-              <span style={{ fontSize: 12, color: "rgba(245,158,11,0.85)", lineHeight: 1.5 }}>Use a trusted Roblox executor. XZX HUB is not responsible for misuse.</span>
-            </div>
-            <button className="copy-btn" style={{ width: "100%", justifyContent: "center", background: copied ? "linear-gradient(135deg, #16a34a, #22c55e)" : "linear-gradient(135deg, #0ea5e9, #38bdf8)", color: "#0a0a0a" }}
-              onClick={() => handleCopy(modal.code)}>
-              {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy to Clipboard</>}
-            </button>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
+// --- UpdatesPage Component ---
 function UpdatesPage() {
   return (
-    <div style={{ minHeight: "100vh", padding: "120px 24px 80px", maxWidth: 1100, margin: "0 auto" }}>
-      <div style={{ marginBottom: 64 }}>
-        <div className="badge anim-fade-up-1" style={{ background: "rgba(168,85,247,0.1)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.2)", marginBottom: 16, display: "inline-block" }}>CHANGELOG</div>
-        <h1 className="font-display anim-fade-up-2" style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, color: "#e2e8f0", marginBottom: 12 }}>Updates & News</h1>
-        <p className="anim-fade-up-3" style={{ color: "rgba(226,232,240,0.5)", fontSize: 15 }}>Stay in the loop — every patch, every feature, every fix.</p>
-      </div>
+    <div className="min-h-screen pt-28 pb-16 px-6 max-w-7xl mx-auto">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-16"
+      >
+        <span className="font-display text-xs tracking-wider text-gray-400 border border-white/20 px-3 py-1 rounded-full">
+          CHANGELOG
+        </span>
+        <h1 className="font-display text-5xl font-bold text-white mt-6 mb-3">Updates & News</h1>
+        <p className="text-gray-400">Stay in the loop — every patch, every feature, every fix.</p>
+      </motion.div>
 
-      <div className="updates-grid" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 48, alignItems: "start" }}>
-        <div style={{ position: "relative" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1, background: "linear-gradient(to bottom, #38bdf8, #a855f7, rgba(168,85,247,0))" }} />
-          <div style={{ display: "flex", flexDirection: "column" }}>
+      <div className="grid lg:grid-cols-[1fr,320px] gap-12">
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-white/40 via-white/20 to-transparent" />
+          <div className="space-y-12">
             {CHANGELOG.map((entry, i) => (
-              <div key={entry.version} className="timeline-item" style={{ paddingLeft: 40, paddingBottom: 48, position: "relative", animationDelay: `${i * 0.1}s` }}>
-                <div style={{ position: "absolute", left: -6, top: 6, width: 13, height: 13, borderRadius: "50%", background: entry.labelColor, boxShadow: `0 0 12px ${entry.labelColor}80`, border: "2px solid #0a0a0a" }} />
-                <div className="glass" style={{ borderRadius: 12, padding: "24px 28px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-                    <span className="font-display" style={{ fontSize: 20, fontWeight: 700, color: "#e2e8f0" }}>{entry.version}</span>
-                    <span className="badge" style={{ background: `${entry.labelColor}18`, color: entry.labelColor, border: `1px solid ${entry.labelColor}35` }}>{entry.label}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "rgba(226,232,240,0.35)", fontFamily: "Rajdhani, sans-serif", fontWeight: 600, marginLeft: "auto" }}><Clock size={11} /> {entry.date}</span>
+              <motion.div 
+                key={entry.version}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative pl-10"
+              >
+                <div className="absolute left-[-5px] top-2 w-2.5 h-2.5 rounded-full border-2 border-black" style={{ backgroundColor: entry.labelColor, boxShadow: `0 0 12px ${entry.labelColor}80` }} />
+                <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:border-white/20 transition-all">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span className="font-display text-lg font-bold text-white">{entry.version}</span>
+                    <span className="font-display text-[10px] tracking-wider px-2 py-0.5 rounded border" style={{ backgroundColor: `${entry.labelColor}10`, color: entry.labelColor, borderColor: `${entry.labelColor}30` }}>
+                      {entry.label}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] tracking-wider text-gray-400 font-display ml-auto">
+                      <Clock size={10} /> {entry.date}
+                    </span>
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: 20, color: "rgba(226,232,240,0.6)", fontSize: 14, lineHeight: 1.8 }}>
-                    {entry.changes.map((c, idx) => <li key={idx}>{c}</li>)}
+                  <ul className="space-y-2">
+                    {entry.changes.map((c, idx) => (
+                      <li key={idx} className="text-gray-400 text-sm">{c}</li>
+                    ))}
                   </ul>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
 
-        <div className="glass" style={{ borderRadius: 14, padding: 28, position: "sticky", top: 100 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 8, background: "linear-gradient(135deg, #0ea5e9, #38bdf8)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <RefreshCw size={18} color="#0a0a0a" />
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="lg:sticky lg:top-28 h-fit"
+        >
+          <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center">
+                <RefreshCw size={18} className="text-white" />
+              </div>
+              <h3 className="font-display font-bold text-white">Auto-Update Active</h3>
             </div>
-            <h3 className="font-display" style={{ fontSize: 16, fontWeight: 700, color: "#e2e8f0" }}>Auto-Update Active</h3>
+            <p className="text-gray-400 text-sm mb-5">
+              XZX HUB scripts update automatically within hours of Roblox patches. No action required.
+            </p>
+            <div className="h-px bg-white/10 my-5" />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] tracking-wider text-gray-500 font-display">LAST CHECK</span>
+              <span className="text-sm text-white font-display font-bold">Just now</span>
+            </div>
           </div>
-          <p style={{ color: "rgba(226,232,240,0.5)", fontSize: 13, lineHeight: 1.7, marginBottom: 24 }}>
-            XZX HUB scripts update automatically within hours of Roblox patches. No action required.
-          </p>
-          <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "20px 0" }} />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, color: "rgba(226,232,240,0.35)", fontFamily: "Rajdhani, sans-serif", fontWeight: 600 }}>LAST CHECK</span>
-            <span style={{ fontSize: 13, color: "#38bdf8", fontFamily: "Rajdhani, sans-serif", fontWeight: 700 }}>Just now</span>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
 }
 
+// --- Main Page Export ---
 export default function Page() {
   const [page, setPage] = useState("home")
 
