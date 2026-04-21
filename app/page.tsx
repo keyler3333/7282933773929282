@@ -12,13 +12,13 @@ import * as THREE from "three"
 
 const LOGO_URL = "https://i.postimg.cc/pLjwZ938/114A3ACE-CAC7-45B3-AB50-FDF67970EB2A.png"
 
-const UNIVERSE_IDS: Record<string, number> = {
-  "Combat Warriors":  2699330604,
-  "Blox Fruits":      2753915549,
-  "Arsenal":          286090429,
-  "Pet Simulator 99": 8737899170,
-  "DOORS":            6516141723,
-  "Brookhaven RP":    4924922222,
+const GAME_THUMBNAILS: Record<string, string> = {
+  "Combat Warriors": "https://cdn.static.pikoya.com/robloxgo/games/4282985734/thumbnail_3",
+  "Blox Fruits": "https://tr.rbxcdn.com/4a6c4e6c4e6c4e6c4e6c4e6c4e6c4e6c/150/150/Image/Png",
+  "Arsenal": "https://cdn.static.pikoya.com/robloxgo/games/1137054487/thumbnail_1",
+  "Pet Simulator 99": "https://cdn.static.pikoya.com/robloxgo/games/8737899170/thumbnail_1",
+  "DOORS": "https://cdn.static.pikoya.com/robloxgo/games/5689626702/thumbnail_1",
+  "Brookhaven RP": "https://cdn.static.pikoya.com/robloxgo/games/3078160987/thumbnail_1",
 }
 
 const SCRIPTS = [
@@ -90,33 +90,27 @@ const CHANGELOG = [
 const CATEGORIES = ["All", "Combat", "Farming", "Utility"]
 
 function GameThumbnail({ game, className = "" }: { game: string; className?: string }) {
-  const [url, setUrl] = useState<string | null>(null)
-  const [err, setErr] = useState(false)
-  const uid = UNIVERSE_IDS[game]
+  const [imgErr, setImgErr] = useState(false)
+  const thumbnailUrl = GAME_THUMBNAILS[game]
 
-  useEffect(() => {
-    if (!uid) { setErr(true); return }
-    fetch(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${uid}&size=150x150&format=Png&isCircular=false`)
-      .then(r => r.json())
-      .then(d => {
-        const img = d?.data?.[0]?.imageUrl
-        if (img) setUrl(img)
-        else setErr(true)
-      })
-      .catch(() => setErr(true))
-  }, [uid])
-
-  if (err || !url) {
+  if (!thumbnailUrl || imgErr) {
     return (
-      <div className={`flex items-center justify-center bg-black ${className}`}>
-        <span className="text-xs font-bold text-white/20 uppercase tracking-widest">
+      <div className={`flex items-center justify-center bg-black/60 backdrop-blur-sm ${className}`}>
+        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">
           {game.split(" ").map(w => w[0]).join("").slice(0, 3)}
         </span>
       </div>
     )
   }
 
-  return <img src={url} alt={game} onError={() => setErr(true)} className={`object-cover ${className}`} />
+  return (
+    <img
+      src={thumbnailUrl}
+      alt={game}
+      onError={() => setImgErr(true)}
+      className={`object-cover ${className}`}
+    />
+  )
 }
 
 function ParticleField() {
@@ -192,7 +186,7 @@ function Navbar({ page, setPage }: { page: string; setPage: (p: string) => void 
 
   return (
     <motion.nav initial={{ y: -80 }} animate={{ y: 0 }} transition={{ duration: 0.4 }} className="fixed top-0 left-0 right-0 z-50 px-5">
-      <div className={`mx-auto max-w-6xl mt-3 rounded-xl transition-all duration-300 ${scrolled ? "bg-black/90 border border-white/10" : "bg-black/50 border border-white/5"}`}>
+      <div className={`mx-auto max-w-6xl mt-3 rounded-xl transition-all duration-300 backdrop-blur-md ${scrolled ? "bg-black/80 border border-white/10" : "bg-black/40 border border-white/5"}`}>
         <div className="flex items-center justify-between px-5 py-3">
           <button onClick={() => setPage("home")} className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10">
@@ -261,14 +255,14 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
             </motion.h1>
 
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="text-white/50 text-xl max-w-2xl mb-10 leading-relaxed">
-              I update these scripts constantly because Roblox patches constantly. They work on my machine and they'll work on yours.
+              We update these scripts constantly because Roblox patches constantly. They work on our machines and they'll work on yours.
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-wrap gap-4">
               <button onClick={() => setPage("scripts")} className="bg-white text-black font-bold text-sm px-8 py-4 rounded-lg hover:bg-white/90 transition flex items-center gap-2">
                 Browse scripts <ArrowRight size={16} />
               </button>
-              <a href="https://discord.gg" target="_blank" rel="noreferrer" className="border border-white/20 text-white/70 font-medium text-sm px-8 py-4 rounded-lg hover:border-white/40 hover:text-white transition flex items-center gap-2">
+              <a href="https://discord.gg" target="_blank" rel="noreferrer" className="backdrop-blur-md bg-white/5 border border-white/20 text-white/70 font-medium text-sm px-8 py-4 rounded-lg hover:border-white/40 hover:bg-white/10 hover:text-white transition flex items-center gap-2">
                 <ExternalLink size={16} /> Discord
               </a>
             </motion.div>
@@ -287,17 +281,17 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
       <section className="py-32 px-6 max-w-6xl mx-auto">
         <div className="grid md:grid-cols-[1.2fr,0.8fr] gap-16">
           <div>
-            <h2 className="font-display text-3xl font-bold text-white mb-6">Why I made this</h2>
-            <p className="text-white/50 text-lg leading-relaxed mb-4">I got tired of scripts breaking two days after I found them. So I started fixing them myself and keeping them updated. Now I just share what I use.</p>
-            <p className="text-white/50 text-lg leading-relaxed">No team, no "company". Just a guy with too much free time and a decent understanding of Roblox's internals.</p>
+            <h2 className="font-display text-3xl font-bold text-white mb-6">Why we made this</h2>
+            <p className="text-white/50 text-lg leading-relaxed mb-4">We got tired of scripts breaking two days after finding them. So we started fixing them ourselves and keeping them updated. Now we just share what we use.</p>
+            <p className="text-white/50 text-lg leading-relaxed">No corporate nonsense, no "company". Just a team of devs with too much free time and a decent understanding of Roblox's internals.</p>
           </div>
           <div className="space-y-6">
             {[
-              { title: "Undetected", desc: "I test everything on alts before release. Haven't been banned yet." },
-              { title: "Fast updates", desc: "If a game patches, I usually have a fix within a day." },
+              { title: "Undetected", desc: "We test everything on alts before release. Haven't been banned yet." },
+              { title: "Fast updates", desc: "If a game patches, we usually have a fix within a day." },
               { title: "No bloat", desc: "Scripts do what they say. No extra garbage." }
             ].map((item, i) => (
-              <div key={i} className="border-l-2 border-white/20 pl-5">
+              <div key={i} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition">
                 <h3 className="font-bold text-white text-lg mb-1">{item.title}</h3>
                 <p className="text-white/40">{item.desc}</p>
               </div>
@@ -314,6 +308,10 @@ function HomePage({ setPage }: { setPage: (p: string) => void }) {
           <p className="text-white/30 text-sm mt-6">Updated {SCRIPTS[0].updated}</p>
         </div>
       </section>
+
+      <footer className="py-8 px-6 border-t border-white/10 text-center">
+        <p className="text-white/30 text-sm">© {new Date().getFullYear()} XZX HUB. All rights reserved.</p>
+      </footer>
     </div>
   )
 }
@@ -348,11 +346,11 @@ function ScriptsPage() {
       <div className="flex flex-wrap gap-3 mb-8">
         <div className="relative flex-1 min-w-[260px]">
           <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full bg-black border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-white/30 focus:outline-none" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-full bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/30 focus:border-white/30 focus:outline-none" />
         </div>
         <div className="flex gap-2">
           {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setCat(c)} className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${cat === c ? "bg-white text-black border-white" : "border-white/10 text-white/50 hover:border-white/30"}`}>{c}</button>
+            <button key={c} onClick={() => setCat(c)} className={`px-4 py-2 rounded-lg border text-sm font-medium transition backdrop-blur-sm ${cat === c ? "bg-white text-black border-white" : "bg-black/40 border-white/10 text-white/50 hover:border-white/30 hover:bg-black/60"}`}>{c}</button>
           ))}
         </div>
       </div>
@@ -360,12 +358,12 @@ function ScriptsPage() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         <AnimatePresence>
           {filtered.map((s, i) => (
-            <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }} className="bg-black border border-white/10 rounded-xl overflow-hidden hover:border-white/30 transition">
-              <div className="relative h-32 bg-black">
+            <motion.div key={s.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.03 }} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-white/30 hover:bg-black/60 transition">
+              <div className="relative h-32 bg-black/60">
                 <GameThumbnail game={s.game} className="absolute inset-0 w-full h-full opacity-70 hover:opacity-100 transition" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <span className="absolute bottom-2 left-3 text-xs font-bold text-white uppercase tracking-wider">{s.game}</span>
-                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border" style={{ color: s.tagColor, borderColor: s.tagColor, backgroundColor: s.tagColor + "20" }}>{s.tag}</span>
+                <span className="absolute bottom-2 left-3 text-xs font-bold text-white uppercase tracking-wider drop-shadow-md">{s.game}</span>
+                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm" style={{ color: s.tagColor, borderColor: s.tagColor, backgroundColor: s.tagColor + "20" }}>{s.tag}</span>
               </div>
               <div className="p-4">
                 <h3 className="font-bold text-white mb-2">{s.name}</h3>
@@ -386,8 +384,8 @@ function ScriptsPage() {
 
       <AnimatePresence>
         {modal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-6" onClick={() => setModal(null)}>
-            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-black border border-white/20 rounded-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6" onClick={() => setModal(null)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl w-full max-w-lg shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex items-start justify-between p-5 border-b border-white/10">
                 <div>
                   <span className="text-xs text-white/40 uppercase tracking-wider">{modal.game}</span>
@@ -396,13 +394,13 @@ function ScriptsPage() {
                 <button onClick={() => setModal(null)} className="text-white/40 hover:text-white"><X size={18} /></button>
               </div>
               <div className="p-5">
-                <div className="bg-black/60 border border-white/10 rounded-lg p-4 mb-4 max-h-48 overflow-y-auto">
+                <div className="bg-black/60 backdrop-blur-sm border border-white/10 rounded-lg p-4 mb-4 max-h-48 overflow-y-auto">
                   <pre className="text-xs text-white/60 whitespace-pre-wrap">{modal.code}</pre>
                 </div>
-                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4 flex gap-2 text-amber-400/80 text-xs">
+                <div className="bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 rounded-lg p-3 mb-4 flex gap-2 text-amber-400/80 text-xs">
                   <span>⚠️</span> Use a trusted executor. Not responsible for misuse.
                 </div>
-                <button onClick={() => copy(modal.code)} className={`w-full font-bold py-3 rounded-lg flex items-center justify-center gap-2 ${copied ? "bg-green-600 text-white" : "bg-white text-black hover:bg-white/90"}`}>
+                <button onClick={() => copy(modal.code)} className={`w-full font-bold py-3 rounded-lg flex items-center justify-center gap-2 backdrop-blur-sm ${copied ? "bg-green-600/80 text-white" : "bg-white text-black hover:bg-white/90"}`}>
                   {copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy script</>}
                 </button>
               </div>
@@ -410,6 +408,9 @@ function ScriptsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <footer className="mt-20 py-8 border-t border-white/10 text-center">
+        <p className="text-white/30 text-sm">© {new Date().getFullYear()} XZX HUB. All rights reserved.</p>
+      </footer>
     </div>
   )
 }
@@ -422,7 +423,7 @@ function UpdatesPage() {
 
       <div className="space-y-8">
         {CHANGELOG.map((entry, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="border-l-2 border-white/20 pl-6">
+          <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition">
             <div className="flex items-baseline gap-3 mb-3">
               <span className="text-lg font-bold text-white">{entry.version}</span>
               <span className="text-sm text-white/30">{entry.date}</span>
@@ -435,6 +436,9 @@ function UpdatesPage() {
           </motion.div>
         ))}
       </div>
+      <footer className="mt-20 py-8 border-t border-white/10 text-center">
+        <p className="text-white/30 text-sm">© {new Date().getFullYear()} XZX HUB. All rights reserved.</p>
+      </footer>
     </div>
   )
 }
