@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var orchestrator: TaskOrchestrator
+    @EnvironmentObject var settingsManager: SettingsManager
     @State private var taskInput: String = ""
+    @State private var showSettings = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -43,6 +45,14 @@ struct ContentView: View {
                 .background(Color.black.opacity(0.9))
                 
                 HStack(spacing: 8) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.bordered)
+                    
                     TextField("What should SERIX do?", text: $taskInput)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .disabled(orchestrator.state == .executing || orchestrator.state == .planning)
@@ -54,7 +64,7 @@ struct ContentView: View {
                             taskInput = ""
                         }
                         .buttonStyle(.borderedProminent)
-                        .disabled(taskInput.isEmpty)
+                        .disabled(taskInput.isEmpty || !settingsManager.hasValidKeys)
                         
                     case .executing:
                         Button("Pause") {
@@ -89,7 +99,16 @@ struct ContentView: View {
             }
             .background(Color(.systemBackground))
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
         .statusBar(hidden: false)
+        .onAppear {
+            orchestrator.updateKeys(settingsManager.apiKeys)
+        }
+        .onChange(of: settingsManager.apiKeys) { newKeys in
+            orchestrator.updateKeys(newKeys)
+        }
     }
     
     func stepColor(_ status: Step.StepStatus) -> Color {
