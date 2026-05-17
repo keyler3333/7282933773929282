@@ -1,0 +1,25 @@
+name: SERIX
+options:
+  bundleIdPrefix: com.serix
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.4"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    INFOPLIST_FILE: SERIX/Info.plist
+
+targets:
+  SERIX:
+    type: application
+    platform: iOS
+    sources:
+      - path: SERIX
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.serix.app
+        INFOPLIST_FILE: SERIX/Info.plist
+        CODE_SIGN_STYLE: Automatic
+    dependencies: []
