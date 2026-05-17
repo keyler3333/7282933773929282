@@ -12,25 +12,32 @@ class GroqAPIClient {
         config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 120
         session = URLSession(configuration: config)
-        loadAPIKeys()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateKeys),
+            name: .apiKeysUpdated,
+            object: nil
+        )
     }
     
-    private func loadAPIKeys() {
-        apiKeys = [
-            "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",
-            "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",
-            "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",
-            "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",
-            "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",
-            "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",
-            "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",
-            "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",
-            "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",
-            "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"
-        ]
+    @objc private func updateKeys(_ notification: Notification) {
+        if let keys = notification.object as? [String] {
+            apiKeys = keys
+            currentKeyIndex = 0
+            failedKeys.removeAll()
+        }
+    }
+    
+    func setKeys(_ keys: [String]) {
+        apiKeys = keys
+        currentKeyIndex = 0
+        failedKeys.removeAll()
     }
     
     private func getNextAvailableKey() -> String? {
+        guard !apiKeys.isEmpty else { return nil }
+        
         let startIndex = currentKeyIndex
         
         repeat {
@@ -50,7 +57,7 @@ class GroqAPIClient {
         
         func attemptRequest() {
             guard let apiKey = getNextAvailableKey() else {
-                completion(.failure(NSError(domain: "GroqAPIClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "All API keys have failed"])))
+                completion(.failure(NSError(domain: "GroqAPIClient", code: -1, userInfo: [NSLocalizedDescriptionKey: "No API keys configured. Please add keys in Settings."])))
                 return
             }
             
@@ -75,12 +82,27 @@ class GroqAPIClient {
                 guard let self = self else { return }
                 
                 if let error = error {
-                    self.failedKeys.insert(self.apiKeys.firstIndex(of: apiKey) ?? 0)
+                    if let keyIndex = self.apiKeys.firstIndex(of: apiKey) {
+                        self.failedKeys.insert(keyIndex)
+                    }
                     if retryCount < self.maxRetries {
                         retryCount += 1
                         attemptRequest()
                     } else {
                         completion(.failure(error))
+                    }
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 429 {
+                    if let keyIndex = self.apiKeys.firstIndex(of: apiKey) {
+                        self.failedKeys.insert(keyIndex)
+                    }
+                    if retryCount < self.maxRetries * self.apiKeys.count {
+                        retryCount += 1
+                        attemptRequest()
+                    } else {
+                        completion(.failure(NSError(domain: "GroqAPIClient", code: 429, userInfo: [NSLocalizedDescriptionKey: "Rate limited on all keys. Please wait or add more keys."])))
                     }
                     return
                 }
@@ -98,7 +120,9 @@ class GroqAPIClient {
                        let content = message["content"] as? String {
                         completion(.success(content))
                     } else {
-                        self.failedKeys.insert(self.apiKeys.firstIndex(of: apiKey) ?? 0)
+                        if let keyIndex = self.apiKeys.firstIndex(of: apiKey) {
+                            self.failedKeys.insert(keyIndex)
+                        }
                         if retryCount < self.maxRetries {
                             retryCount += 1
                             attemptRequest()
