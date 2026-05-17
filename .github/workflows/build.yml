@@ -10,7 +10,6 @@ on:
 env:
   XCODE_VERSION: '15.4'
   SCHEME: 'SERIX'
-  PROJECT: 'SERIX.xcodeproj'
   BUNDLE_ID: 'com.serix.app'
 
 permissions:
@@ -29,11 +28,7 @@ jobs:
         run: brew install swiftlint
 
       - name: Run SwiftLint
-        run: |
-          if [ -d "SERIX" ]; then
-            cd SERIX
-          fi
-          swiftlint --strict
+        run: swiftlint --strict
 
   test:
     name: Test
@@ -43,13 +38,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate --spec project.yml
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
       - name: Build for testing
         run: |
           xcodebuild build-for-testing \
-            -project ${{ env.PROJECT }} \
+            -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -skipPackagePluginValidation \
@@ -59,7 +60,7 @@ jobs:
       - name: Run tests
         run: |
           xcodebuild test-without-building \
-            -project ${{ env.PROJECT }} \
+            -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -skipPackagePluginValidation \
@@ -81,13 +82,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate --spec project.yml
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
       - name: Build with analyzer
         run: |
           xcodebuild build \
-            -project ${{ env.PROJECT }} \
+            -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -skipPackagePluginValidation \
@@ -140,13 +147,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate --spec project.yml
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
       - name: Archive
         run: |
           xcodebuild archive \
-            -project ${{ env.PROJECT }} \
+            -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -archivePath ./build/SERIX.xcarchive \
             -destination 'generic/platform=iOS' \
@@ -185,10 +198,10 @@ jobs:
           name: Release v${{ github.run_number }}
           body: |
             ## SERIX Build ${{ github.run_number }}
-            
+
             ### Commit
             ${{ github.sha }} on ${{ github.ref_name }}
-            
+
             ### IPA
             Available in workflow artifacts.
           draft: false
