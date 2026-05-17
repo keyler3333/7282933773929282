@@ -44,18 +44,24 @@ class AIPlanner {
 
     func generateInitialPlan(task: String, completion: @escaping (Result<[Step], Error>) -> Void) {
         conversationHistory = [
-            ["role": "system", "content": """
-            You are SERIX, an autonomous web agent. Your job is to break down user tasks into specific browser action steps.
-            For each step, provide:
-            1. action: click, type, scroll, navigate, extract, wait, submit, select
-            2. selector: CSS selector or XPath to target element
-            3. value: text to type or URL to navigate to
-            4. description: human-readable description of what this step does
+            [
+                "role": "system",
+                "content": """
+                You are SERIX, an autonomous web agent. Your job is to break down user tasks into specific browser action steps.
+                For each step, provide:
+                1. action: click, type, scroll, navigate, extract, wait, submit, select
+                2. selector: CSS selector or XPath to target element
+                3. value: text to type or URL to navigate to
+                4. description: human-readable description of what this step does
 
-            Return ONLY a valid JSON array of step objects. No markdown, no explanations.
-            Example: [{"action":"navigate","value":"https://google.com","description":"Go to Google"},{"action":"type","selector":"input[name='q']","value":"weather today","description":"Type search query"}]
-            """],
-            ["role": "user", "content": "Task: \(task)\nGenerate a complete plan as a JSON array of steps."],
+                Return ONLY a valid JSON array of step objects. No markdown, no explanations.
+                Example: [{"action":"navigate","value":"https://google.com","description":"Go to Google"},{"action":"type","selector":"input[name='q']","value":"weather today","description":"Type search query"}]
+                """,
+            ],
+            [
+                "role": "user",
+                "content": "Task: \(task)\nGenerate a complete plan as a JSON array of steps.",
+            ],
         ]
 
         apiClient.sendPrompt(messages: conversationHistory) { result in
