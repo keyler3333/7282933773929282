@@ -41,14 +41,6 @@ analyzer_rules:
   - unused_declaration
   - unused_import
 
-included:
-  - SERIX
-
-excluded:
-  - .build
-  - Pods
-  - DerivedData
-
 identifier_name:
   min_length: 2
   max_length:
