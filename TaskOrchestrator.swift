@@ -48,6 +48,10 @@ class TaskOrchestrator: ObservableObject {
         setupWebView()
     }
     
+    func updateKeys(_ keys: [String]) {
+        groqClient.setKeys(keys)
+    }
+    
     private func setupWebView() {
         let cspScript = """
         var meta = document.createElement('meta');
