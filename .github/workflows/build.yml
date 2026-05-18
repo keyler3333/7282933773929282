@@ -10,11 +10,9 @@ on:
 env:
   XCODE_VERSION: '15.4'
   SCHEME: 'SERIX'
-  BUNDLE_ID: 'com.serix.app'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   lint:
@@ -50,7 +48,7 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
-      - name: Build
+      - name: Build for Simulator
         run: |
           xcodebuild build \
             -project SERIX.xcodeproj \
@@ -80,7 +78,7 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
-      - name: Build with analyzer
+      - name: Build with Analyzer
         run: |
           xcodebuild build \
             -project SERIX.xcodeproj \
@@ -126,77 +124,3 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: critical
-
-  build_ipa:
-    name: Build IPA
-    runs-on: macos-14
-    needs: [build, analyze, security_scan]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project
-        run: xcodegen generate --spec project.yml
-
-      - name: Fix Xcode project format
-        run: sed -i '' 's/objectVersion = [0-9]*;/objectVersion = 60;/' SERIX.xcodeproj/project.pbxproj
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
-
-      - name: Archive
-        run: |
-          xcodebuild archive \
-            -project SERIX.xcodeproj \
-            -scheme ${{ env.SCHEME }} \
-            -archivePath ./build/SERIX.xcarchive \
-            -destination 'generic/platform=iOS' \
-            -skipPackagePluginValidation
-
-      - name: Export IPA
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath ./build/SERIX.xcarchive \
-            -exportOptionsPlist ./ExportOptions.plist \
-            -exportPath ./build/ipa
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: SERIX.ipa
-          path: ./build/ipa/SERIX.ipa
-
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: build_ipa
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          body: |
-            ## SERIX Build ${{ github.run_number }}
-
-            ### Commit
-            ${{ github.sha }} on ${{ github.ref_name }}
-
-            ### IPA
-            Available in workflow artifacts.
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
