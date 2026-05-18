@@ -29,7 +29,7 @@ jobs:
         run: swiftlint --strict
 
   build:
-    name: Build
+    name: Build & Package
     runs-on: macos-14
     needs: lint
     steps:
@@ -54,9 +54,25 @@ jobs:
             -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -derivedDataPath ./DerivedData \
             -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO
+
+      - name: Package App
+        run: |
+          APP_PATH=$(find ./DerivedData/Build/Products -name "*.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app found"
+            exit 1
+          fi
+          zip -r SERIX-simulator.zip "$APP_PATH"
+
+      - name: Upload App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SERIX-simulator
+          path: SERIX-simulator.zip
 
   analyze:
     name: Static Analysis
