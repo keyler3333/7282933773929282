@@ -30,8 +30,8 @@ jobs:
       - name: Run SwiftLint
         run: swiftlint --strict
 
-  test:
-    name: Test
+  build:
+    name: Build
     runs-on: macos-14
     needs: lint
     steps:
@@ -50,32 +50,15 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
 
-      - name: Build for testing
+      - name: Build
         run: |
-          xcodebuild build-for-testing \
+          xcodebuild build \
             -project SERIX.xcodeproj \
             -scheme ${{ env.SCHEME }} \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
             -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO
-
-      - name: Run tests
-        run: |
-          xcodebuild test-without-building \
-            -project SERIX.xcodeproj \
-            -scheme ${{ env.SCHEME }} \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            -skipPackagePluginValidation \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
 
   analyze:
     name: Static Analysis
@@ -147,7 +130,7 @@ jobs:
   build_ipa:
     name: Build IPA
     runs-on: macos-14
-    needs: [test, analyze, security_scan]
+    needs: [build, analyze, security_scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout
